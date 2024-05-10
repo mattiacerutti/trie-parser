@@ -1,5 +1,5 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
-
+#include <fstream>
 /* Here below, your implementation of trie. */
 template <typename T>
 void trie<T>::set_weight(double w) {
@@ -120,6 +120,198 @@ trie<T>::trie(trie<T> const& other){
     this->m_c = bag<trie<T>>(other.get_children(), this);
 }
 
+void cleanString(string& str){
+
+    int firstChar = str.find_first_not_of(" \t\n");
+
+    int lastChar = str.find_last_not_of(" \t\n");
+
+    if(firstChar == string::npos || lastChar == string::npos){
+        return;
+    }
+
+    string newStr = str.substr(firstChar, lastChar - firstChar + 1);
+
+    //If the new string still has spaces, tabs or newlines, it means that the keyword is not well formatted
+    if(newStr.find(' ') != string::npos || newStr.find('\t') != string::npos || newStr.find('\n') != string::npos){
+        throw parser_exception("Invalid input: keywords can't have spaces, tabs or newlines in the middle of the string");
+    }
+
+    //Remove spaces only in the edges
+    str.erase(remove(str.begin(), str.end(), ' '), str.end());
+
+    //Remove newlines
+    str.erase(remove(str.begin(), str.end(), '\n'), str.end());
+
+    //Remove tabs
+    str.erase(remove(str.begin(), str.end(), '\t'), str.end());
+}
+
+string getNextChunk(istream& is){
+    string chunk;
+    getline(is, chunk, ' ');
+
+    cleanString(chunk);
+
+    while(chunk == "" || chunk == "\n" || chunk == "\t"){
+        getline(is, chunk, ' ');
+    }
+
+    return chunk;
+}
+
+char getNextChar(istream& is){
+    char nextChar;
+    is>>nextChar;
+
+    while(nextChar == ' ' || nextChar == '\n' || nextChar == '\t'){
+         is>>nextChar;
+    }
+
+    return nextChar;
+}
+
+void C(istream& is){
+    string firstChunk = getNextChunk(is);
+
+    if(firstChunk == "children"){
+        // We have a label and a weight
+    } else {
+        throw parser_exception("Invalid input: expected children but got something else");
+    }
+}
+
+
+void B(istream& is, bool& shouldEspectLeaf){
+    string firstChunk = getNextChunk(is);
+
+    if(firstChunk == "children"){
+        // We have only a label
+    } else{
+        // We have a label and a weight
+
+        //Check if weight is double
+        try{
+            stod(firstChunk);
+        } catch(invalid_argument e){
+            throw parser_exception("Invalid input: weight should be a double");
+        }
+
+        shouldEspectLeaf = true;
+    
+        C(is);
+    }
+}
+
+void S(istream& is, bool isFirstNode = false);
+
+void T(istream& is, bool shouldEspectLeaf){
+
+    char nextChar = getNextChar(is);
+    if(nextChar == '}'){
+
+        if(!shouldEspectLeaf){
+            throw parser_exception("Invalid input: a leaf node must have a weight");
+        }
+
+        // We have a leaf
+        is.unget();
+    } else {
+        // We have a node
+
+        if(shouldEspectLeaf){
+            throw parser_exception("Invalid input: a non-leaf node must not have a weight");
+        }
+
+        //Go back one character
+        is.unget();
+        S(is);
+    }
+}
+
+
+void S(istream& is, bool isFirstNode){
+    string firstChunk = getNextChunk(is);
+
+    bool shouldEspectLeaf = false;
+
+    if(firstChunk == "children"){
+
+        if(!isFirstNode){
+            throw parser_exception("Invalid input: all non-root nodes should have a label");
+        }
+
+        // We are in the root
+    } else {
+
+        if(isFirstNode){
+            throw parser_exception("Invalid input: root node should start with children keyword");
+        }
+
+
+        // We are in a child
+
+        if(firstChunk.find('}') != string::npos || firstChunk.find('{') != string::npos || firstChunk.find('=') != string::npos || firstChunk.find(',') != string::npos){
+            throw parser_exception("Invalid input: got unexpected character in the beginning of the string");
+        }
+        B(is, shouldEspectLeaf);
+    }
+
+    // Check if there is "="
+    char equalChar = getNextChar(is);
+    if(equalChar != '='){
+        throw parser_exception("Invalid input: expected = but got something else");
+    }
+
+    // Check if there is "{"
+    char firstChar = getNextChar(is);
+    if(firstChar != '{'){
+        throw parser_exception("Invalid input: expected { but got something else");
+    }
+
+
+    T(is, shouldEspectLeaf);
+
+    // Check if there is "}"
+    char secondChar = getNextChar(is);
+    if(secondChar != '}'){
+        throw parser_exception("Invalid input: expected } but got something else");
+    }
+
+    // Check if there is ","
+    char thirdChar = getNextChar(is);
+    if(thirdChar == ','){
+        S(is);
+    } else {
+        // We need to go back one character, because we already read the next pharentesis
+        is.unget();
+    }
+
+
+}
+
+
+
+
+
+template <typename T>
+istream& operator>>(std::istream& stream, trie<T>& trie){
+
+    //TODO: Add label type checking = T
+
+    //If file is empty
+    if(stream.peek() == EOF){
+        throw parser_exception("File is empty");
+        return stream;
+    }
+    
+    S(stream, true);
+    cout<<"Parsing successful"<<endl;
+
+
+    return stream;
+}
+
 
 
 int main() {
@@ -140,24 +332,22 @@ int main() {
 
         trie<int> t2 = trie<int>(t);
 
+        // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
+        // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
 
+        trie<int> t3;
 
-
-
-        cout<<"Children1 size is: "<<t.get_children().size()<<endl;
-        cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
-
-        // trie<int> retrievedNode = t.get_children().getNode(0);
-        
-        // cout<<"Weight of first children is: "<<retrievedNode.get_weight()<<endl;
+        //FIXME: ONLY FOR TESTING REASONS
+        ifstream file("../test.txt");
+        file>>t3;
         
         return 0;
-    }  catch (parser_exception* e){
-        throw runtime_error(e->what());
+    }  catch (parser_exception e){
+        throw runtime_error(e.what());
         return 1;
     }
-     catch (trie_exception* e){
-        throw runtime_error(e->what());
+     catch (trie_exception e){
+        throw runtime_error(e.what());
         return 1;
     }
 
