@@ -1,0 +1,19 @@
+{
+    "files.associations": {
+        "*.embeddedhtml": "html",
+        "*.svelte": "svelte",
+        "vector": "cpp",
+        "iosfwd": "cpp",
+        "__split_buffer": "cpp",
+        "string": "cpp",
+        "ostream": "cpp",
+        "iostream": "cpp",
+        "stdexcept": "cpp",
+        "new": "cpp",
+        "cassert": "cpp",
+        "__assert": "cpp",
+        "__availability": "cpp",
+        "__config": "cpp"
+    },
+    "C_Cpp.errorSquiggles": "disabled"
+}

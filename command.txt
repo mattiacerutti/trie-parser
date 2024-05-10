@@ -1,0 +1,2 @@
+EXECUTE:
+g++ src/trie.cpp -std=c++17 -o trie.o && ./trie.o
