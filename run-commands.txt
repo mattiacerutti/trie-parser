@@ -1,0 +1,5 @@
+EXECUTE:
+clear && g++ src/trie.cpp -std=c++17 -o trie.o && ./trie.o
+
+TEST WITH FILE PARSING:
+clear && g++ src/trie.cpp -std=c++17 -o trie.o && ./trie.o < test.txt
