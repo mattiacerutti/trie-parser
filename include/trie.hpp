@@ -15,23 +15,23 @@ private:
 template <typename T>
 struct trie {
     /* node iterators */
-    // struct node_iterator {
-    //     using iterator_category = std::forward_iterator_tag;
-    //     using value_type = T;
-    //     using pointer = T*;
-    //     using reference = T&;
+    struct node_iterator {
+        using iterator_category = std::forward_iterator_tag;
+        using value_type = T;
+        using pointer = T*;
+        using reference = T&;
 
-    //     node_iterator(trie<T>*);
-    //     reference operator*() const;
-    //     pointer operator->() const;
-    //     node_iterator& operator++();
-    //     node_iterator operator++(int);
-    //     bool operator==(node_iterator const&) const;
-    //     bool operator!=(node_iterator const&) const;
+        node_iterator(trie<T>*);
+        // reference operator*() const;
+        // pointer operator->() const;
+        // node_iterator& operator++();
+        // node_iterator operator++(int);
+        // bool operator==(node_iterator const&) const;
+        // bool operator!=(node_iterator const&) const;
 
-    // private:
-    //     trie<T>* m_ptr;
-    // };
+    private:
+        trie<T>* m_ptr;
+    };
     // struct const_node_iterator {
     //     using iterator_category = std::forward_iterator_tag;
     //     using value_type = const T;
@@ -132,7 +132,7 @@ struct trie {
 //     /* methods to return iterators */
 //     leaf_iterator begin();
 //     leaf_iterator end();
-//     node_iterator root();
+        node_iterator root();
 //     const_leaf_iterator begin() const;
 //     const_leaf_iterator end() const;
 //     const_node_iterator root() const;

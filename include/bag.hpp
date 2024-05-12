@@ -62,9 +62,7 @@ struct bag<trie<T>> {
 
         for(int i = 0; i < nodes.size(); i++){
 
-            trie<T> currentNode = *(nodes[i]);
-
-            if((*node).get_label() > currentNode.get_label() ){
+            if(*(*node).get_label() > *(*nodes[i]).get_label() ){
                 if(i == nodes.size() - 1){
                     nodes.push_back(node);
                     return;
@@ -81,7 +79,7 @@ struct bag<trie<T>> {
         }
     }
 
-    bool hasLabel(T* label) {
+    bool hasLabel(const T* label) {
         for(int i = 0; i < nodes.size(); i++){
 
             if(*((*nodes[i]).get_label()) == *label){

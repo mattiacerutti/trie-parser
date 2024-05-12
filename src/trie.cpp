@@ -7,7 +7,7 @@ void trie<T>::set_weight(double w) {
     /* TODO: Implement leaf check: if the node IS NOT a leaf (meaning it has some children) should throw an error*/
 
     if(this->m_c.size() > 0){
-        throw parser_exception("Node is not a leaf");
+        throw parser_exception("Cannot set weight for a non-leaf node");
     }
 
 
@@ -25,20 +25,11 @@ void trie<T>::set_label(T* l) {
 
     // Set the label only if node IS NOT the root (meaning it has a parent)
     if(this->m_p){
-
-        /* TODO: Implement label check on parent children: label should be assigned on this node only if there is not another arc from a parent to one of the siblings with the same label*/
-        /* This label check WON'T be tested, but is good practice to implement it anyway*/
-
-        bag<trie<T>> parentChildren = this->m_p->get_children();
-
-        if(parentChildren.hasLabel(l)){
-            throw parser_exception("Label already exists in parent children");
-        }
     
         this->m_l = l;
         return;
     } 
-    throw parser_exception("Root node should not have a label");
+    throw parser_exception("Root node should not have a label. If you're trying to set a label for a child node, please call set_parent first");
 
     
 }
@@ -52,7 +43,6 @@ T const* trie<T>::get_label() const {
     }
 
     return nullptr;
-    //TODO: Throw error
 
 }
 
@@ -69,13 +59,32 @@ const trie<T>* trie<T>::get_parent() const {
 template <typename T>
 void trie<T>::add_child(trie<T> const& c){
 
-    /* C should have a valid label before being added */
-
+    // Should have a valid label before being added
     if(c.get_label() == nullptr){
-        //FIXME: Throw error? Idk
         throw parser_exception("Child node should have a valid label before being added");
     }
-    this->m_c.add(&c);
+
+    // Should have a valid parent before being added
+    if(c.get_parent() == nullptr){
+        throw parser_exception("Child node should have a valid parent before being added");
+    }
+
+    // Check if there are any siblings with the same label
+    bag<trie<T>> siblings = this->m_c;
+    if(siblings.hasLabel(c.get_label())){
+        throw parser_exception("Invalid input: a node with the same label already exists");
+    }
+
+
+    // If current node has a weight, we need to remove it
+    if(this->m_w != 0.0){
+        this->m_w = 0.0;
+    }
+
+    trie<T>* p_child = new trie<T>(c);
+    p_child->set_parent(this);
+
+    this->m_c.add(p_child);
 }
 
 template <typename T>
@@ -90,7 +99,10 @@ trie<T>::trie(){
     this->m_w = 0.0;
 
     //Initialize bag
-    this->m_c = bag<trie<T>>();
+
+    bag<trie<T>>* p_bag = new bag<trie<T>>();
+
+    this->m_c = *p_bag;
 }
 
 template <typename T>
@@ -100,7 +112,9 @@ trie<T>::trie(double w){
     this->m_w = w;
 
     //Initialize bag
-    this->m_c = bag<trie<T>>(this);
+    bag<trie<T>>* p_bag = new bag<trie<T>>();
+
+    this->m_c = *p_bag;
 }
 
 template <typename T>
@@ -117,7 +131,10 @@ trie<T>::trie(trie<T> const& other){
     // Parent is not copied
     this->m_p = nullptr;
 
-    this->m_c = bag<trie<T>>(other.get_children(), this);
+    // Children are copied
+    bag<trie<T>>* p_bag = new bag<trie<T>>(other.get_children(), this);
+
+    this->m_c = *p_bag;
 }
 
 void cleanString(string& str){
@@ -177,22 +194,23 @@ void C(istream& is){
     if(firstChunk == "children"){
         // We have a label and a weight
     } else {
-        throw parser_exception("Invalid input: expected children but got something else");
+        throw parser_exception("Invalid input: expected children but got something else (this usually happens when a node has another property other than weight and label)");
     }
 }
 
-
-void B(istream& is, bool& shouldEspectLeaf){
+template <typename T>
+void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie){
     string firstChunk = getNextChunk(is);
 
     if(firstChunk == "children"){
         // We have only a label
+
     } else{
         // We have a label and a weight
 
         //Check if weight is double
         try{
-            stod(firstChunk);
+            currentTrie.set_weight(stod(firstChunk));
         } catch(invalid_argument e){
             throw parser_exception("Invalid input: weight should be a double");
         }
@@ -200,21 +218,26 @@ void B(istream& is, bool& shouldEspectLeaf){
         shouldEspectLeaf = true;
     
         C(is);
+
     }
 }
+template <typename T>
+void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie);
 
-void S(istream& is, bool isFirstNode = false);
+template <typename T>
+void S(istream& is, trie<T>& currentTrie);
 
-void T(istream& is, bool shouldEspectLeaf){
+template <typename T>
+void R(istream& is, bool shouldEspectLeaf, trie<T>& currentTrie){
 
     char nextChar = getNextChar(is);
     if(nextChar == '}'){
+        // We have a leaf
 
         if(!shouldEspectLeaf){
             throw parser_exception("Invalid input: a leaf node must have a weight");
         }
 
-        // We have a leaf
         is.unget();
     } else {
         // We have a node
@@ -225,37 +248,86 @@ void T(istream& is, bool shouldEspectLeaf){
 
         //Go back one character
         is.unget();
-        S(is);
+
+        // Build the child
+        
+        auto it = currentTrie.root();
+        using ValueType = typename decltype(it)::value_type;
+
+
+        trie<ValueType>* p_child = new trie<ValueType>();
+        trie<ValueType> child = *p_child;
+        child.set_parent(&currentTrie);
+        S(is, child, currentTrie);
+
+        // Add the new child to the parent trie we passed as an argument
+        currentTrie.add_child(child);
     }
 }
 
+template <typename T>
+void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie){
 
-void S(istream& is, bool isFirstNode){
+
     string firstChunk = getNextChunk(is);
 
     bool shouldEspectLeaf = false;
 
     if(firstChunk == "children"){
-
-        if(!isFirstNode){
-            throw parser_exception("Invalid input: all non-root nodes should have a label");
-        }
-
         // We are in the root
+
+        throw parser_exception("Invalid input: non-root nodes should have a label");
+
+
     } else {
-
-        if(isFirstNode){
-            throw parser_exception("Invalid input: root node should start with children keyword");
-        }
-
-
-        // We are in a child
+        // We are in a child and firstChunk is a label 
 
         if(firstChunk.find('}') != string::npos || firstChunk.find('{') != string::npos || firstChunk.find('=') != string::npos || firstChunk.find(',') != string::npos){
             throw parser_exception("Invalid input: got unexpected character in the beginning of the string");
         }
-        B(is, shouldEspectLeaf);
+
+        using trieType = decay_t<T>;
+
+        try{
+            if constexpr (is_same_v<trieType, string>){
+                currentTrie.set_label(new trieType(firstChunk));
+            } else if constexpr (is_same_v<trieType, char>) {
+
+                if(firstChunk.size() != 1){
+                    throw parser_exception("Invalid input: char label can only have one character");
+                }
+
+                currentTrie.set_label(new trieType(firstChunk[0]));
+            } else if constexpr (is_integral_v<trieType>){
+
+                if(firstChunk.find('.') != string::npos){
+                    throw parser_exception("Invalid input: label type is an integer, but got a floating point number");
+                }
+
+                trieType value = stoi(firstChunk);
+
+                currentTrie.set_label(new trieType(value));
+            }else if constexpr (is_floating_point_v<trieType>){
+
+                trieType value = stod(firstChunk);
+
+                currentTrie.set_label(new trieType(value));
+            }
+            
+            else {
+                throw parser_exception("Invalid input: label type not supported");
+            }
+        } catch(invalid_argument e){
+            throw parser_exception("Error while parsing label");
+        }
+        
+
+        B(is, shouldEspectLeaf, currentTrie);
     }
+
+
+    /* Here we correctly set label and weight */
+
 
     // Check if there is "="
     char equalChar = getNextChar(is);
@@ -269,8 +341,8 @@ void S(istream& is, bool isFirstNode){
         throw parser_exception("Invalid input: expected { but got something else");
     }
 
+    R(is, shouldEspectLeaf, currentTrie);
 
-    T(is, shouldEspectLeaf);
 
     // Check if there is "}"
     char secondChar = getNextChar(is);
@@ -278,10 +350,91 @@ void S(istream& is, bool isFirstNode){
         throw parser_exception("Invalid input: expected } but got something else");
     }
 
+
+
+    /* Here we correctly inserted all children */
+
+
     // Check if there is ","
     char thirdChar = getNextChar(is);
     if(thirdChar == ','){
-        S(is);
+
+        // We have a sibling
+
+        auto it = currentTrie.root();
+        using ValueType = typename decltype(it)::value_type;
+
+        trie<ValueType>* p_sibling = new trie<ValueType>();
+        trie<ValueType> sibling = *p_sibling;
+
+        sibling.set_parent(&parentTrie);
+
+        S(is, sibling, parentTrie);
+
+        // Add the new sibling to the parent trie we passed as an argument
+        parentTrie.add_child(sibling);
+
+    } else {
+        // We need to go back one character, because we already read the next pharentesis
+        is.unget();
+    }
+    
+}
+
+template <typename T>
+void S(istream& is, trie<T>& currentTrie){
+    string firstChunk = getNextChunk(is);
+
+    bool shouldEspectLeaf = false;
+
+    if(firstChunk == "children"){
+        // We are in the root
+
+
+    } else {
+        
+
+        throw parser_exception("Invalid input: root node should start with children keyword");
+
+    }
+
+
+    /* Here we correctly set label and weight */
+
+
+    // Check if there is "="
+    char equalChar = getNextChar(is);
+    if(equalChar != '='){
+        throw parser_exception("Invalid input: expected = but got something else");
+    }
+
+    // Check if there is "{"
+    char firstChar = getNextChar(is);
+    if(firstChar != '{'){
+        throw parser_exception("Invalid input: expected { but got something else");
+    }
+
+    R(is, shouldEspectLeaf, currentTrie);
+
+    // Check if there is "}"
+    char secondChar = getNextChar(is);
+    if(secondChar != '}'){
+        throw parser_exception("Invalid input: expected } but got something else");
+    }
+
+
+
+    /* Here we correctly inserted all children */
+
+
+    // Check if there is ","
+    char thirdChar = getNextChar(is);
+    if(thirdChar == ','){
+        // We have a sibling
+
+        throw parser_exception("Invalid input: root node should not have siblings");
+
+
     } else {
         // We need to go back one character, because we already read the next pharentesis
         is.unget();
@@ -305,41 +458,53 @@ istream& operator>>(std::istream& stream, trie<T>& trie){
         return stream;
     }
     
-    S(stream, true);
+    S(stream, trie);
     cout<<"Parsing successful"<<endl;
 
 
     return stream;
 }
 
+template <typename T>
+trie<T>::node_iterator::node_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 
+template <typename T>
+typename trie<T>::node_iterator trie<T>::root() {
+    //FIXME: NOT CORRECT
+    return node_iterator(this);
+}
 
 int main() {
     try{
-        trie<int> t;
+        // trie<int> t;
 
-        trie<int> child1;
-        child1.set_parent(&t);
-        child1.set_weight(5);
-        child1.set_label(new int(2));
-        t.add_child(child1);
+        // trie<int> child1;
+        // child1.set_parent(&t);
+        // child1.set_weight(5);
+        // child1.set_label(new int(2));
+        // t.add_child(child1);
 
-        // trie<int> child2;
-        // child2.set_parent(&t);
-        // child2.set_weight(6.0);
-        // child2.set_label(new int(3));
-        // t.add_child(child2);
+        // // trie<int> child2;
+        // // child2.set_parent(&t);
+        // // child2.set_weight(6.0);
+        // // child2.set_label(new int(3));
+        // // t.add_child(child2);
 
-        trie<int> t2 = trie<int>(t);
+        // trie<int> t2 = trie<int>(t);
 
         // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
         // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
 
         trie<int> t3;
-
+        
         //FIXME: ONLY FOR TESTING REASONS
         ifstream file("../test.txt");
         file>>t3;
+
+        // cin>>t3;
+
+        cout<<"Size of root: "<<t3.get_children().size()<<endl;
+        cout<<"Size of child:"<<t3.get_children().getNode(0)->get_children().size()<<endl;
         
         return 0;
     }  catch (parser_exception e){
