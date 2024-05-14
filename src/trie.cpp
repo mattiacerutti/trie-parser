@@ -1,5 +1,6 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
 #include <fstream>
+
 /* Here below, your implementation of trie. */
 template <typename T>
 void trie<T>::set_weight(double w) {
@@ -16,9 +17,9 @@ void trie<T>::set_weight(double w) {
 
 template <typename T>
 double trie<T>::get_weight() const {
-
     return this->m_w;
 }
+
 
 template <typename T>
 void trie<T>::set_label(T* l) {
@@ -29,6 +30,7 @@ void trie<T>::set_label(T* l) {
         this->m_l = l;
         return;
     } 
+
     throw parser_exception("Root node should not have a label. If you're trying to set a label for a child node, please call set_parent first");
 
     
@@ -154,14 +156,7 @@ void cleanString(string& str){
         throw parser_exception("Invalid input: keywords can't have spaces, tabs or newlines in the middle of the string");
     }
 
-    //Remove spaces only in the edges
-    str.erase(remove(str.begin(), str.end(), ' '), str.end());
-
-    //Remove newlines
-    str.erase(remove(str.begin(), str.end(), '\n'), str.end());
-
-    //Remove tabs
-    str.erase(remove(str.begin(), str.end(), '\t'), str.end());
+    str = newStr;
 }
 
 string getNextChunk(istream& is){
@@ -221,6 +216,7 @@ void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie){
 
     }
 }
+
 template <typename T>
 void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie);
 
@@ -469,9 +465,120 @@ template <typename T>
 trie<T>::node_iterator::node_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 
 template <typename T>
+typename trie<T>::node_iterator& trie<T>::node_iterator::operator++() {
+
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_p == nullptr){
+        throw parser_exception("Node has no parent");
+    }
+
+    m_ptr = m_ptr->m_p;
+
+    return *this;
+}
+
+template <typename T>
+typename trie<T>::node_iterator trie<T>::node_iterator::operator++(int) {
+    node_iterator ob = *this;
+
+    ++(*this);
+
+    return ob;
+}
+
+template <typename T>
+typename trie<T>::node_iterator::reference trie<T>::node_iterator::operator*() const {
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_l == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return *m_ptr->m_l;
+}
+
+template <typename T>
+typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->() const {
+    if(m_ptr == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return m_ptr->m_l;
+}
+
+template <typename T>
+bool trie<T>::node_iterator::operator==(node_iterator const& node) const {
+    return this->m_ptr == node.m_ptr;
+}
+
+template <typename T>
+bool trie<T>::node_iterator::operator!=(node_iterator const& node) const {
+    return this->m_ptr != node.m_ptr;
+}
+
+
+template <typename T>
+trie<T>::const_node_iterator::const_node_iterator(trie<T> const* ptr) : m_ptr(ptr) {}
+
+template <typename T>
+typename trie<T>::const_node_iterator& trie<T>::const_node_iterator::operator++() {
+
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_p == nullptr){
+        throw parser_exception("Node has no parent");
+    }
+
+    m_ptr = m_ptr->m_p;
+
+    return *this;
+}
+
+template <typename T>
+typename trie<T>::const_node_iterator trie<T>::const_node_iterator::operator++(int) {
+    const_node_iterator ob = *this;
+
+    ++(*this);
+
+    return ob;
+}
+
+template <typename T>
+typename trie<T>::const_node_iterator::reference trie<T>::const_node_iterator::operator*() const {
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_l == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return *m_ptr->m_l;
+}
+
+template <typename T>
+typename trie<T>::const_node_iterator::pointer trie<T>::const_node_iterator::operator->() const {
+    if(m_ptr == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return m_ptr->m_l;
+}
+
+template <typename T>
+bool trie<T>::const_node_iterator::operator==(const_node_iterator const& node) const {
+    return this->m_ptr == node.m_ptr;
+}
+
+template <typename T>
+bool trie<T>::const_node_iterator::operator!=(const_node_iterator const& node) const {
+    return this->m_ptr != node.m_ptr;
+}
+
+
+
+template <typename T>
 typename trie<T>::node_iterator trie<T>::root() {
-    //FIXME: NOT CORRECT
-    return node_iterator(this);
+    
+    trie<T>* tr = this;
+    while(tr->get_parent() != nullptr){
+        tr = tr->m_p; 
+    }
+
+    return node_iterator(tr);
+
+
 }
 
 int main() {
@@ -501,17 +608,14 @@ int main() {
         ifstream file("../test.txt");
         file>>t3;
 
-        // cin>>t3;
-
-        cout<<"Size of root: "<<t3.get_children().size()<<endl;
-        cout<<"Size of child:"<<t3.get_children().getNode(0)->get_children().size()<<endl;
+        trie<int>::node_iterator it = t3.root();
+        trie<int>::node_iterator it2 = t3.root();
         
         return 0;
     }  catch (parser_exception e){
         throw runtime_error(e.what());
         return 1;
-    }
-     catch (trie_exception e){
+    } catch (trie_exception e){
         throw runtime_error(e.what());
         return 1;
     }

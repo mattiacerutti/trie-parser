@@ -1,4 +1,6 @@
 children = {
-  1 2 children = {},
-  2 20 children = {}
+  1 children = {
+    2 20 children = {}
+  },
+  3 20 children = {}
 }
