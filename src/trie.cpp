@@ -1,6 +1,6 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
 #include <fstream>
-
+#include <algorithm>
 /* Here below, your implementation of trie. */
 template <typename T>
 void trie<T>::set_weight(double w) {
@@ -567,6 +567,243 @@ bool trie<T>::const_node_iterator::operator!=(const_node_iterator const& node) c
 }
 
 
+template <typename T>
+trie<T>::leaf_iterator::leaf_iterator(trie<T>* ptr) : m_ptr(ptr) {}
+
+template <typename T>
+typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*() const {
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_l == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return *m_ptr->m_l;
+}
+
+template <typename T>
+typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->() const {
+    if(m_ptr == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return m_ptr->m_l;
+}
+
+template <typename T>
+bool trie<T>::leaf_iterator::operator==(leaf_iterator const& node) const {
+    return this->m_ptr == node.m_ptr;
+}
+
+template <typename T>
+bool trie<T>::leaf_iterator::operator!=(leaf_iterator const& node) const {
+    return this->m_ptr != node.m_ptr;
+}
+
+template <typename T>
+trie<T> * findNextLeaf(trie<T>* current, trie<T>* root, bool& foundCurrent){
+
+    if(root == nullptr){
+        return nullptr;
+    }
+
+    if(root->get_children().size() == 0){
+        if(foundCurrent){
+            return root;
+        }
+        if(root == current){
+            foundCurrent = true;
+        }   
+        return nullptr;
+    }
+
+
+    for(int i = 0; i < root->get_children().size(); i++){
+        trie<T>* node = findNextLeaf(current, root->get_children().get(i), foundCurrent);
+        if(node != nullptr){
+            return node;
+        }
+    }
+
+    return nullptr;
+
+}
+
+
+template <typename T>
+typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
+
+    trie<T>* root = m_ptr->m_p;
+    while(root->get_parent() != nullptr){
+        root = root->m_p;
+    }
+    
+    bool foundCurrent = false;
+    trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
+
+    m_ptr = nextLeaf;
+
+    return *this;
+}
+
+template <typename T>
+typename trie<T>::leaf_iterator trie<T>::leaf_iterator::operator++(int) {
+    leaf_iterator ob = *this;
+
+    ++(*this);
+
+    return ob;
+}
+
+template <typename T>
+trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
+    
+    trie<T>* tr = m_ptr;
+
+    return node_iterator(tr);
+}
+
+template <typename T>
+trie<T> const& trie<T>::leaf_iterator::get_leaf() const {
+    
+    return *m_ptr;
+}
+
+
+
+
+
+
+
+
+template <typename T>
+trie<T>::const_leaf_iterator::const_leaf_iterator(const trie<T>* ptr) : m_ptr(ptr) {}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator::reference trie<T>::const_leaf_iterator::operator*() const {
+    //TODO: Don't know if i should do this
+    if(m_ptr->m_l == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return *m_ptr->m_l;
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator::pointer trie<T>::const_leaf_iterator::operator->() const {
+    if(m_ptr == nullptr){
+        throw parser_exception("Invalid input: node has no label");
+    }
+    return m_ptr->m_l;
+}
+
+template <typename T>
+bool trie<T>::const_leaf_iterator::operator==(const_leaf_iterator const& node) const {
+    return this->m_ptr == node.m_ptr;
+}
+
+template <typename T>
+bool trie<T>::const_leaf_iterator::operator!=(const_leaf_iterator const& node) const {
+    return this->m_ptr != node.m_ptr;
+}
+
+
+template <typename T>
+const trie<T> * findNextLeaf(const trie<T>* current, const trie<T>* root, bool& foundCurrent){
+
+    if(root == nullptr){
+        return nullptr;
+    }
+
+    if(root->get_children().size() == 0){
+        if(foundCurrent){
+            return root;
+        }
+        if(root == current){
+            foundCurrent = true;
+        }   
+        return nullptr;
+    }
+
+
+    for(int i = 0; i < root->get_children().size(); i++){
+        const trie<T>* node = findNextLeaf(current, root->get_children().get(i), foundCurrent);
+        if(node != nullptr){
+            return node;
+        }
+    }
+
+    return nullptr;
+
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator& trie<T>::const_leaf_iterator::operator++() {
+
+    const trie<T>* root = m_ptr->m_p;
+    while(root->get_parent() != nullptr){
+        root = root->m_p;
+    }
+    
+    bool foundCurrent = false;
+    const trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
+
+    m_ptr = nextLeaf;
+
+    return *this;
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator trie<T>::const_leaf_iterator::operator++(int) {
+    const_leaf_iterator ob = *this;
+
+    ++(*this);
+
+    return ob;
+}
+
+template <typename T>
+trie<T>::const_leaf_iterator::operator trie<T>::const_node_iterator() const {
+    
+    const trie<T>* tr = m_ptr;
+
+    return const_node_iterator(tr);
+}
+
+template <typename T>
+trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
+    
+    return *m_ptr;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+template <typename T>
+typename trie<T>::leaf_iterator trie<T>::begin(){
+    
+    trie<T> *  root = this;
+    while(root->m_p != nullptr){
+        root = root->m_p;
+    }
+
+    while(root->get_children().size() > 0){
+        root = root->get_children().get(0);
+    }
+
+    return leaf_iterator(root);
+}
+
+template <typename T>
+typename trie<T>::leaf_iterator trie<T>::end(){
+    return leaf_iterator(nullptr);
+}
 
 template <typename T>
 typename trie<T>::node_iterator trie<T>::root() {
@@ -577,9 +814,39 @@ typename trie<T>::node_iterator trie<T>::root() {
     }
 
     return node_iterator(tr);
-
-
 }
+
+template <typename T>
+typename trie<T>::const_leaf_iterator trie<T>::begin() const{
+    
+    const trie<T> *  root = this;
+    while(root->m_p != nullptr){
+        root = root->m_p;
+    }
+
+    while(root->get_children().size() > 0){
+        root = root->get_children().get(0);
+    }
+
+    return const_leaf_iterator(root);
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator trie<T>::end() const {
+    return const_leaf_iterator(nullptr);
+}
+
+template <typename T>
+typename trie<T>::const_node_iterator trie<T>::root() const {
+    
+    const trie<T>* tr = this;
+    while(tr->get_parent() != nullptr){
+        tr = tr->m_p; 
+    }
+
+    return const_node_iterator(tr);
+}
+
 
 int main() {
     try{
@@ -602,14 +869,26 @@ int main() {
         // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
         // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
 
-        trie<int> t3;
+        trie<char> t3;
         
         //FIXME: ONLY FOR TESTING REASONS
         ifstream file("../test.txt");
         file>>t3;
 
-        trie<int>::node_iterator it = t3.root();
-        trie<int>::node_iterator it2 = t3.root();
+        const trie<char> t = t3;
+
+        /* assume t is a trie<T> */
+        for (trie<char>::const_leaf_iterator leaf_it = t.begin(); leaf_it != t.end(); ++leaf_it) {
+            trie<char>::const_node_iterator node_it = leaf_it; // we convert leaf_it into node_it to navigate from leaf to root
+            std::vector<char> s;
+            while (node_it != t.root()) {
+                s.push_back(*node_it);
+                ++node_it;
+            }
+            std::reverse(s.begin(), s.end());
+            for (auto const& x: s) std::cout << x << ' ';
+            std::cout << '\n';
+        }
         
         return 0;
     }  catch (parser_exception e){

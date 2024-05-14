@@ -30,13 +30,13 @@ struct bag<trie<T>> {
     //Contructors and deconstructor
     
     bag() {
-        nodes = vector<const trie<T>*>();
+        nodes = vector<trie<T>*>();
     }
 
     bag(const bag& other, trie<T> * parent) {
         for(int i = 0; i < other.size(); i++){
 
-            const trie<T> * oldNode = other.getNode(i);
+            const trie<T> * oldNode = other.get(i);
             trie<T> * newNode = new trie<T>(*oldNode);
 
             newNode->set_parent(parent);
@@ -50,7 +50,7 @@ struct bag<trie<T>> {
     }
 
     //Methods
-    void add(const trie<T> * node) {
+    void add(trie<T> * node) {
 
 
         if(nodes.size() == 0){
@@ -90,10 +90,10 @@ struct bag<trie<T>> {
         return false;
     }
 
-    const trie<T> * getNode(int i) const {
+    trie<T> * get(int i) const {
 
         if(i < 0 || i >= nodes.size()){
-            throw new trie_exception("Node with index " + to_string(i) + " does not exist.");
+            return nullptr;
         }
 
         return nodes[i];
@@ -106,6 +106,6 @@ struct bag<trie<T>> {
 private:
 
     //Data
-    vector<const trie<T>*> nodes;
+    vector<trie<T>*> nodes;
 
 };
