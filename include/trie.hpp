@@ -66,7 +66,8 @@ struct trie {
         bool operator!=(leaf_iterator const&) const;
         operator node_iterator() const;
 
-        trie<T> const& get_leaf() const;
+        trie<T>& get_leaf() const;
+
 
     private:
         trie<T>* m_ptr;
@@ -125,9 +126,9 @@ struct trie {
 //     trie<T>& operator[](std::vector<T> const&);
 //     trie<T> const& operator[](std::vector<T> const&) const;
 
-//     /* max-weight leaf */
-//     trie<T>& max();
-//     trie<T> const& max() const;
+    /* max-weight leaf */
+    trie<T>& max();
+    trie<T> const& max() const;
 
 //     /* methods to return iterators */
     leaf_iterator begin();

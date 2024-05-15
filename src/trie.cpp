@@ -661,7 +661,7 @@ trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
 }
 
 template <typename T>
-trie<T> const& trie<T>::leaf_iterator::get_leaf() const {
+trie<T>& trie<T>::leaf_iterator::get_leaf() const {
     
     return *m_ptr;
 }
@@ -848,6 +848,63 @@ typename trie<T>::const_node_iterator trie<T>::root() const {
 }
 
 
+
+
+template <typename T>
+trie<T>& trie<T>::max() {
+
+    double maxWeight = 0.0;
+    leaf_iterator maxLeafIt = this->begin(); 
+
+
+    for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
+
+        const trie<T>& leaf = leaf_it.get_leaf();
+
+        if(leaf.get_weight() > maxWeight){
+            maxWeight = leaf.get_weight();
+            maxLeafIt = leaf_it;
+        }
+    }
+
+    return maxLeafIt.get_leaf();
+}
+
+template <typename T>
+const trie<T> & trie<T>::max() const{
+
+    double maxWeight = 0.0;
+    const_leaf_iterator maxLeafIt = this->begin(); 
+
+
+    for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
+
+        const trie<T>& leaf = leaf_it.get_leaf();
+
+        if(leaf.get_weight() > maxWeight){
+            maxWeight = leaf.get_weight();
+            maxLeafIt = leaf_it;
+        }
+    }
+
+    return maxLeafIt.get_leaf();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 int main() {
     try{
         // trie<int> t;
@@ -869,27 +926,28 @@ int main() {
         // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
         // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
 
-        trie<char> t3;
+        trie<char> t;
         
         //FIXME: ONLY FOR TESTING REASONS
         ifstream file("../test.txt");
-        file>>t3;
+        file>>t;
 
-        const trie<char> t = t3;
+        // /* assume t is a trie<T> */
+        // for (trie<char>::leaf_iterator leaf_it = t.begin(); leaf_it != t.end(); ++leaf_it) {
+        //     trie<char>::node_iterator node_it = leaf_it; // we convert leaf_it into node_it to navigate from leaf to root
+        //     std::vector<char> s;
+        //     while (node_it != t.root()) {
+        //         s.push_back(*node_it);
+        //         ++node_it;
+        //     }
+        //     std::reverse(s.begin(), s.end());
+        //     for (auto const& x: s) std::cout << x << ' ';
+        //     std::cout << '\n';
+        // }
 
-        /* assume t is a trie<T> */
-        for (trie<char>::const_leaf_iterator leaf_it = t.begin(); leaf_it != t.end(); ++leaf_it) {
-            trie<char>::const_node_iterator node_it = leaf_it; // we convert leaf_it into node_it to navigate from leaf to root
-            std::vector<char> s;
-            while (node_it != t.root()) {
-                s.push_back(*node_it);
-                ++node_it;
-            }
-            std::reverse(s.begin(), s.end());
-            for (auto const& x: s) std::cout << x << ' ';
-            std::cout << '\n';
-        }
-        
+        trie<char>& max = t.max();
+        max.set_label(new char('z'));
+
         return 0;
     }  catch (parser_exception e){
         throw runtime_error(e.what());
