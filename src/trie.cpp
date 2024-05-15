@@ -72,8 +72,7 @@ void trie<T>::add_child(trie<T> const& c){
     }
 
     // Check if there are any siblings with the same label
-    bag<trie<T>> siblings = this->m_c;
-    if(siblings.hasLabel(c.get_label())){
+    if(this->m_c.hasLabel(c.get_label())){
         throw parser_exception("Invalid input: a node with the same label already exists");
     }
 
@@ -102,9 +101,9 @@ trie<T>::trie(){
 
     //Initialize bag
 
-    bag<trie<T>>* p_bag = new bag<trie<T>>();
+    // bag<trie<T>> * p_bag = new bag<trie<T>>();
 
-    this->m_c = *p_bag;
+    // this->m_c = bag<trie<T>>();  //Usless line because bag gets initialized immiediately
 }
 
 template <typename T>
@@ -114,9 +113,9 @@ trie<T>::trie(double w){
     this->m_w = w;
 
     //Initialize bag
-    bag<trie<T>>* p_bag = new bag<trie<T>>();
+    // bag<trie<T>>* p_bag = new bag<trie<T>>();
 
-    this->m_c = *p_bag;
+    // this->m_c = bag<trie<T>>();
 }
 
 template <typename T>
@@ -134,9 +133,17 @@ trie<T>::trie(trie<T> const& other){
     this->m_p = nullptr;
 
     // Children are copied
-    bag<trie<T>>* p_bag = new bag<trie<T>>(other.get_children(), this);
+    // bag<trie<T>>* p_bag = new bag<trie<T>>(other.get_children(), this);
 
-    this->m_c = *p_bag;
+    bag<trie<T>> b = bag<trie<T>>(other.get_children(), this);
+
+    this->m_c.assignFrom(b, this);
+
+}
+
+template <typename T>
+trie<T>::~trie(){
+    delete this->m_l;
 }
 
 void cleanString(string& str){
@@ -251,8 +258,7 @@ void R(istream& is, bool shouldEspectLeaf, trie<T>& currentTrie){
         using ValueType = typename decltype(it)::value_type;
 
 
-        trie<ValueType>* p_child = new trie<ValueType>();
-        trie<ValueType> child = *p_child;
+        trie<ValueType> child;
         child.set_parent(&currentTrie);
         S(is, child, currentTrie);
 
@@ -360,8 +366,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie){
         auto it = currentTrie.root();
         using ValueType = typename decltype(it)::value_type;
 
-        trie<ValueType>* p_sibling = new trie<ValueType>();
-        trie<ValueType> sibling = *p_sibling;
+        trie<ValueType> sibling;
 
         sibling.set_parent(&parentTrie);
 
@@ -860,7 +865,6 @@ trie<T>& trie<T>::max() {
     for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
 
         const trie<T>& leaf = leaf_it.get_leaf();
-
         if(leaf.get_weight() > maxWeight){
             maxWeight = leaf.get_weight();
             maxLeafIt = leaf_it;
@@ -925,10 +929,27 @@ int main() {
 
         // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
         // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
+        // {
+        
+        // trie<char> root;
 
-        trie<char> t;
+        // trie<char> child1;
+        // child1.set_parent(&root); 
+        // child1.set_weight(5.0);
+        // child1.set_label(new char('a'));
+
+        // trie<char> child2;
+        // child2.set_parent(&root); 
+        // child2.set_label(new char('b')); 
+        // child2.set_weight(6.0);
+
+        // root.add_child(child1);
+        // root.add_child(child2);
+        // }
+
         
         //FIXME: ONLY FOR TESTING REASONS
+        trie<char> t;
         ifstream file("../test.txt");
         file>>t;
 
@@ -945,8 +966,8 @@ int main() {
         //     std::cout << '\n';
         // }
 
-        trie<char>& max = t.max();
-        max.set_label(new char('z'));
+        // trie<char>& max = t.max();
+        // max.set_label(new char('z'));
 
         return 0;
     }  catch (parser_exception e){

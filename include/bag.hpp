@@ -46,7 +46,32 @@ struct bag<trie<T>> {
     }
 
     ~bag() {
+        for(trie<T>* node : nodes){
+            delete node;
+        }
         nodes.clear();
+    }
+
+    bag& assignFrom(const bag& other, trie<T> * parent) {
+        if (this == &other) {
+            return *this;
+        }
+
+        // Clear existing nodes
+        for (trie<T>* node : nodes) {
+            delete node;
+        }
+        nodes.clear();
+
+        // Copy nodes from other bag
+        for (int i = 0; i < other.size(); i++) {
+            const trie<T>* oldNode = other.get(i);
+            trie<T>* newNode = new trie<T>(*oldNode);
+            newNode->set_parent(parent);
+            nodes.push_back(newNode);
+        }
+
+        return *this;
     }
 
     //Methods
@@ -98,6 +123,7 @@ struct bag<trie<T>> {
 
         return nodes[i];
     }
+
 
     int size() const {
         return nodes.size();
