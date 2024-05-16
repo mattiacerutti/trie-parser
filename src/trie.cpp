@@ -127,6 +127,18 @@ trie<T>::trie(trie<T> const& other){
 }
 
 template <typename T>
+trie<T>::trie(trie<T>&& other){
+    this->m_l = other.m_l;
+    this->m_w = other.m_w;
+    this->m_p = other.m_p;
+
+    this->m_c = std::move(other.m_c);
+
+    other.m_l = nullptr;
+    other.m_p = nullptr;
+}
+
+template <typename T>
 trie<T>::~trie(){
     
     delete this->m_l;
@@ -135,6 +147,27 @@ trie<T>::~trie(){
     this->m_p = nullptr;
     this->m_l = nullptr;
     this->m_w = 0.0;
+}
+
+template <typename T>
+trie<T>& trie<T>::operator=(trie<T> const& other){
+
+    this->m_w = other.get_weight();
+
+    this->m_c = other.get_children();
+    this->m_c.setParent(this);
+
+    return *this;
+}
+
+template <typename T>
+trie<T>& trie<T>::operator=(trie<T> && other){
+
+    this->m_w = other.get_weight();
+
+    this->m_c = std::move(other.m_c);
+
+    return *this;
 }
 
 void cleanString(string& str){
@@ -889,78 +922,23 @@ const trie<T> & trie<T>::max() const{
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 int main() {
     try{
-        // trie<int> t;
-
-        // trie<int> child1;
-        // child1.set_parent(&t);
-        // child1.set_weight(5);
-        // child1.set_label(new int(2));
-        // t.add_child(child1);
-
-        // // trie<int> child2;
-        // // child2.set_parent(&t);
-        // // child2.set_weight(6.0);
-        // // child2.set_label(new int(3));
-        // // t.add_child(child2);
-
-        // trie<int> t2 = trie<int>(t);
-
-        // cout<<"Children1 size is: "<<t.get_children().size()<<endl;
-        // cout<<"Children2 size is: "<<t2.get_children().size()<<endl;
-        // {
-        
-        // trie<char> root;
-
-        // trie<char> child1;
-        // child1.set_parent(&root); 
-        // child1.set_weight(5.0);
-        // child1.set_label(new char('a'));
-
-        // trie<char> child2;
-        // child2.set_parent(&root); 
-        // child2.set_label(new char('b')); 
-        // child2.set_weight(6.0);
-
-        // root.add_child(child1);
-        // root.add_child(child2);
-        // }
-
         
         //FIXME: ONLY FOR TESTING REASONS
         trie<char> t;
         ifstream file("../test.txt");
         file>>t;
+        file.close();
 
-        // /* assume t is a trie<T> */
-        // for (trie<char>::leaf_iterator leaf_it = t.begin(); leaf_it != t.end(); ++leaf_it) {
-        //     trie<char>::node_iterator node_it = leaf_it; // we convert leaf_it into node_it to navigate from leaf to root
-        //     std::vector<char> s;
-        //     while (node_it != t.root()) {
-        //         s.push_back(*node_it);
-        //         ++node_it;
-        //     }
-        //     std::reverse(s.begin(), s.end());
-        //     for (auto const& x: s) std::cout << x << ' ';
-        //     std::cout << '\n';
-        // }
+        trie<char> t1;
+        ifstream asd("../test2.txt");
+        asd>>t1;
+        asd.close();
 
-        // trie<char>& max = t.max();
-        // max.set_label(new char('z'));
+        *t.get_children().get(1)->get_children().get(0) = move(t1);
 
-
+        // trie<char> mv = std::move(t);
 
         return 0;
     }  catch (parser_exception e){

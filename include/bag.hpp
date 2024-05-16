@@ -36,11 +36,18 @@ struct bag<trie<T>> {
     bag(const bag& other) {
         for(int i = 0; i < other.size(); i++){
 
-            const trie<T> * oldNode = other.get(i);
-            trie<T> * newNode = new trie<T>(*oldNode);
+            trie<T> * newNode = new trie<T>(other.get(i));
 
             nodes.push_back(newNode);
         }
+    }
+
+    bag(const bag&& other) {
+        for(int i = 0; i < other.size(); i++){
+
+            nodes.push_back(other.get(i));
+        }
+        other.nodes.clear();
     }
 
     ~bag() {
@@ -64,6 +71,22 @@ struct bag<trie<T>> {
 
             nodes.push_back(newNode);
         }
+
+        return *this;
+    }
+
+    bag& operator=(bag&& other) {
+
+        for(auto node : nodes){
+            delete node;
+        }
+        nodes.clear();
+
+        for(int i = 0; i < other.size(); i++){
+
+            nodes.push_back(other.get(i));
+        }
+        other.nodes.clear();
 
         return *this;
     }

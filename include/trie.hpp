@@ -97,14 +97,14 @@ struct trie {
     trie();
     trie(double);
     trie(trie<T> const&);
-    // trie(trie<T>&&);
+    trie(trie<T>&&);
 
     /* destructor */
     ~trie();
 
     // /* assignment operators */
-    // trie<T>& operator=(trie<T> const&);
-    // trie<T>& operator=(trie<T>&&);
+    trie<T>& operator=(trie<T> const&);
+    trie<T>& operator=(trie<T>&&);
 
     /* setters */
     void set_weight(double w);
