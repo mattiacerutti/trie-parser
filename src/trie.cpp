@@ -1,6 +1,6 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
 #include <fstream>
-#include <algorithm>
+
 /* Here below, your implementation of trie. */
 template <typename T>
 void trie<T>::set_weight(double w) {
@@ -77,7 +77,7 @@ void trie<T>::add_child(trie<T> const& c){
     }
 
 
-    // If current node has a weight, we need to remove it
+    // If current node has a weight, we need to remove it (because non-leaf nodes can't have a weight)
     if(this->m_w != 0.0){
         this->m_w = 0.0;
     }
@@ -98,12 +98,6 @@ trie<T>::trie(){
     this->m_p = nullptr;
     this->m_l = nullptr;
     this->m_w = 0.0;
-
-    //Initialize bag
-
-    // bag<trie<T>> * p_bag = new bag<trie<T>>();
-
-    // this->m_c = bag<trie<T>>();  //Usless line because bag gets initialized immiediately
 }
 
 template <typename T>
@@ -111,11 +105,6 @@ trie<T>::trie(double w){
     this->m_p = nullptr;
     this->m_l = nullptr;
     this->m_w = w;
-
-    //Initialize bag
-    // bag<trie<T>>* p_bag = new bag<trie<T>>();
-
-    // this->m_c = bag<trie<T>>();
 }
 
 template <typename T>
@@ -129,21 +118,23 @@ trie<T>::trie(trie<T> const& other){
 
     this->m_w = other.get_weight();
 
-    // Parent is not copied
+    // Parent is not copied because it could have another one. We need to set it manually.
     this->m_p = nullptr;
 
-    // Children are copied
-    // bag<trie<T>>* p_bag = new bag<trie<T>>(other.get_children(), this);
-
-    bag<trie<T>> b = bag<trie<T>>(other.get_children(), this);
-
-    this->m_c.assignFrom(b, this);
+    this->m_c = other.get_children();
+    this->m_c.setParent(this);
 
 }
 
 template <typename T>
 trie<T>::~trie(){
+    
     delete this->m_l;
+
+    // Set pointers to null. We can use this to check via debugger if something is actually been de-allocated
+    this->m_p = nullptr;
+    this->m_l = nullptr;
+    this->m_w = 0.0;
 }
 
 void cleanString(string& str){
@@ -968,6 +959,8 @@ int main() {
 
         // trie<char>& max = t.max();
         // max.set_label(new char('z'));
+
+
 
         return 0;
     }  catch (parser_exception e){
