@@ -170,6 +170,43 @@ trie<T>& trie<T>::operator=(trie<T> && other){
     return *this;
 }
 
+template <typename T>
+bool areChildrenEqual(bag<trie<T>> const& c1, bag<trie<T>> const& c2){
+
+    if(c1.size() != c2.size()){
+        return false;
+    }
+
+    for(int i = 0; i < c1.size(); i++){
+        trie<T> * child1 = c1.get(i);
+        trie<T> * child2 = c2.get(i);
+
+        if(*child1->get_label() != *child2->get_label() || child1->get_weight() != child2->get_weight()){
+            return false;
+        }
+
+        if(!areChildrenEqual(child1->get_children(), child2->get_children())){
+            return false;
+        }
+    }
+
+    return true;
+}
+
+template <typename T>
+bool trie<T>::operator==(trie<T> const& other) const{
+    if(*this->m_l != *other.get_label() || this->m_w != other.get_weight()){
+        return false;
+    }
+
+    return areChildrenEqual(this->m_c, other.get_children());
+}
+
+template <typename T>
+bool trie<T>::operator!=(trie<T> const& other) const{
+    return !(*this == other);
+}
+
 void cleanString(string& str){
 
     int firstChar = str.find_first_not_of(" \t\n");
@@ -936,7 +973,9 @@ int main() {
         asd>>t1;
         asd.close();
 
-        *t.get_children().get(1)->get_children().get(0) = move(t1);
+        // *t.get_children().get(1)->get_children().get(0) = move(t1);
+
+        cout<< (*t.get_children().get(1) != *t1.get_children().get(0)) <<endl;
 
         // trie<char> mv = std::move(t);
 

@@ -119,8 +119,8 @@ struct trie {
     bag<trie<T>> const& get_children() const;
 
     /* comparison */
-//     bool operator==(trie<T> const&) const;
-//     bool operator!=(trie<T> const&) const;
+    bool operator==(trie<T> const&) const;
+    bool operator!=(trie<T> const&) const;
 
 //     /* prefix-search */
 //     trie<T>& operator[](std::vector<T> const&);
