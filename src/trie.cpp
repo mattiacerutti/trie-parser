@@ -195,10 +195,23 @@ bool areChildrenEqual(bag<trie<T>> const& c1, bag<trie<T>> const& c2){
 
 template <typename T>
 bool trie<T>::operator==(trie<T> const& other) const{
+
+    // If one is root and the other is not, they are not equal
+    if(this->m_l == nullptr && other.get_label() != nullptr || this->m_l != nullptr && other.get_label() == nullptr){
+        return false;
+    }
+
+    // If both are root, we need to check if they have the same children and the same weight
+    if(this->m_l == nullptr && other.get_label() == nullptr){
+        return this->m_w == other.get_weight() && areChildrenEqual(this->m_c, other.get_children());
+    }
+
+    // If both are non-root, we need to check if they have the same label and weight
     if(*this->m_l != *other.get_label() || this->m_w != other.get_weight()){
         return false;
     }
 
+    // Finally, we need to check if they have the same children
     return areChildrenEqual(this->m_c, other.get_children());
 }
 
@@ -973,9 +986,11 @@ int main() {
         asd>>t1;
         asd.close();
 
+        trie<char> t2(t);
+
         // *t.get_children().get(1)->get_children().get(0) = move(t1);
 
-        cout<< (*t.get_children().get(1) != *t1.get_children().get(0)) <<endl;
+        cout<< (t2 == t) <<endl;
 
         // trie<char> mv = std::move(t);
 
