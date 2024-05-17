@@ -121,15 +121,15 @@ struct bag<trie<T>> {
         }
     }
 
-    bool hasLabel(const T* label) {
-        for(int i = 0; i < nodes.size(); i++){
+    trie<T> * getWithLabel(const T label) const {
 
-            if(*((*nodes[i]).get_label()) == *label){
-                return true;
+        for(trie<T> * node : nodes){
+            if(*node->get_label() == label){
+                return node;
             }
         }
 
-        return false;
+        return nullptr;
     }
 
     trie<T> * get(int i) const {

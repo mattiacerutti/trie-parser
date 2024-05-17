@@ -1,6 +1,6 @@
 children = {
   c children = {
-    i 30 children = {},
-    z 40 children = {}
-  }
+    i 30 children = {}
+  },
+   z 40 children = {}
 }

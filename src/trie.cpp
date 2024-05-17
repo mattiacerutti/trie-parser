@@ -5,12 +5,9 @@
 template <typename T>
 void trie<T>::set_weight(double w) {
 
-    /* TODO: Implement leaf check: if the node IS NOT a leaf (meaning it has some children) should throw an error*/
-
     if(this->m_c.size() > 0){
         throw parser_exception("Cannot set weight for a non-leaf node");
     }
-
 
     this->m_w = w;
 }
@@ -72,7 +69,7 @@ void trie<T>::add_child(trie<T> const& c){
     }
 
     // Check if there are any siblings with the same label
-    if(this->m_c.hasLabel(c.get_label())){
+    if(this->m_c.getWithLabel(*c.get_label()) != nullptr){
         throw parser_exception("Invalid input: a node with the same label already exists");
     }
 
@@ -218,6 +215,42 @@ bool trie<T>::operator==(trie<T> const& other) const{
 template <typename T>
 bool trie<T>::operator!=(trie<T> const& other) const{
     return !(*this == other);
+}
+
+template <typename T>
+trie<T>& trie<T>::operator[](std::vector<T> const& path){
+    trie<T>* current = this;
+
+    for(T label : path){
+
+        trie<T>* tmp = current->get_children().getWithLabel(label);
+
+        if(tmp != nullptr){
+            current = tmp;
+        } else {
+            break;
+        }
+    }
+
+    return *current;
+}
+
+template <typename T>
+trie<T> const& trie<T>::operator[](std::vector<T> const& path) const {
+    const trie<T>* current = this;
+
+    for(T label : path){
+
+        const trie<T>* tmp = current->get_children().getWithLabel(label);
+
+        if(tmp != nullptr){
+            current = tmp;
+        } else {
+            break;
+        }
+    }
+
+    return *current;
 }
 
 void cleanString(string& str){
@@ -986,11 +1019,13 @@ int main() {
         asd>>t1;
         asd.close();
 
-        trie<char> t2(t);
+        const trie<char>& t3 = t1;
 
         // *t.get_children().get(1)->get_children().get(0) = move(t1);
 
-        cout<< (t2 == t) <<endl;
+        vector<char> s{'c', 'i', 'z'};
+
+        const trie<char>& t2 = t3[s];
 
         // trie<char> mv = std::move(t);
 

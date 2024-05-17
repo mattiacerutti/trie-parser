@@ -123,8 +123,8 @@ struct trie {
     bool operator!=(trie<T> const&) const;
 
 //     /* prefix-search */
-//     trie<T>& operator[](std::vector<T> const&);
-//     trie<T> const& operator[](std::vector<T> const&) const;
+    trie<T>& operator[](std::vector<T> const&);
+    trie<T> const& operator[](std::vector<T> const&) const;
 
     /* max-weight leaf */
     trie<T>& max();
