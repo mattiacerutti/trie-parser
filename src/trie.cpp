@@ -46,12 +46,28 @@ T const* trie<T>::get_label() const {
 }
 
 template <typename T>
+T * trie<T>::get_label(){
+    
+        // Return the label only if node IS NOT the root (meaning it has a parent)
+        if(this->m_p != nullptr){
+            return this->m_l;
+        }
+    
+        return nullptr;
+}
+
+template <typename T>
 void trie<T>::set_parent(trie<T>* p){   
     this->m_p = p;
 }
 
 template <typename T>
 const trie<T>* trie<T>::get_parent() const {
+    return this->m_p;
+}
+
+template <typename T>
+trie<T>* trie<T>::get_parent() {
     return this->m_p;
 }
 
@@ -91,6 +107,11 @@ bag<trie<T>> const& trie<T>::get_children() const{
 }
 
 template <typename T>
+bag<trie<T>> & trie<T>::get_children() {
+    return this->m_c;
+}
+
+template <typename T>
 trie<T>::trie(){
     this->m_p = nullptr;
     this->m_l = nullptr;
@@ -118,7 +139,9 @@ trie<T>::trie(trie<T> const& other){
     // Parent is not copied because it could have another one. We need to set it manually.
     this->m_p = nullptr;
 
+    // This copy-construct also the childrens
     this->m_c = other.get_children();
+
     this->m_c.setParent(this);
 
 }
@@ -1005,38 +1028,38 @@ const trie<T> & trie<T>::max() const{
 
 
 
-int main() {
-    try{
+// int main() {
+//     try{
         
-        //FIXME: ONLY FOR TESTING REASONS
-        trie<char> t;
-        ifstream file("../test.txt");
-        file>>t;
-        file.close();
+//         // //FIXME: ONLY FOR TESTING REASONS
+//         // trie<char> t;
+//         // ifstream file("../test.txt");
+//         // file>>t;
+//         // file.close();
 
-        trie<char> t1;
-        ifstream asd("../test2.txt");
-        asd>>t1;
-        asd.close();
+//         // trie<char> t1;
+//         // ifstream asd("../test2.txt");
+//         // asd>>t1;
+//         // asd.close();
 
-        const trie<char>& t3 = t1;
+//         // const trie<char>& t3 = t1;
 
-        // *t.get_children().get(1)->get_children().get(0) = move(t1);
+//         // // *t.get_children().get(1)->get_children().get(0) = move(t1);
 
-        vector<char> s{'c', 'i', 'z'};
+//         // vector<char> s{'c', 'i', 'z'};
 
-        const trie<char>& t2 = t3[s];
+//         // const trie<char>& t2 = t3[s];
 
-        // trie<char> mv = std::move(t);
+//         // // trie<char> mv = std::move(t);
 
-        return 0;
-    }  catch (parser_exception e){
-        throw runtime_error(e.what());
-        return 1;
-    } catch (trie_exception e){
-        throw runtime_error(e.what());
-        return 1;
-    }
+//         return 0;
+//     }  catch (parser_exception e){
+//         throw runtime_error(e.what());
+//         return 1;
+//     } catch (trie_exception e){
+//         throw runtime_error(e.what());
+//         return 1;
+//     }
 
 
-}
+// }
