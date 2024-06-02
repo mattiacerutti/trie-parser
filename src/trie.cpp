@@ -1,357 +1,354 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
-#include <fstream>
 
 /* Here below, your implementation of trie. */
 template <typename T>
 void trie<T>::set_weight(double w) {
+   if (this->m_c.size() > 0) {
+      throw parser_exception("Cannot set weight for a non-leaf node");
+   }
 
-    if(this->m_c.size() > 0){
-        throw parser_exception("Cannot set weight for a non-leaf node");
-    }
-
-    this->m_w = w;
+   this->m_w = w;
 }
 
 template <typename T>
 double trie<T>::get_weight() const {
-    return this->m_w;
+   return this->m_w;
 }
-
 
 template <typename T>
 void trie<T>::set_label(T* l) {
+   // Set the label only if node IS NOT the root (meaning it has a parent)
+   if (this->m_p) {
+      this->m_l = l;
+      return;
+   }
 
-    // Set the label only if node IS NOT the root (meaning it has a parent)
-    if(this->m_p){
-    
-        this->m_l = l;
-        return;
-    } 
-
-    throw parser_exception("Root node should not have a label. If you're trying to set a label for a child node, please call set_parent first");
-
-    
+   throw parser_exception(
+       "Root node should not have a label. If you're trying to set a label "
+       "for a child node, please call set_parent first");
 }
 
 template <typename T>
 T const* trie<T>::get_label() const {
+   // Return the label only if node IS NOT the root (meaning it has a parent)
+   if (this->m_p != nullptr) {
+      return this->m_l;
+   }
 
-    // Return the label only if node IS NOT the root (meaning it has a parent)
-    if(this->m_p != nullptr){
-        return this->m_l;
-    }
-
-    return nullptr;
-
+   return nullptr;
 }
 
 template <typename T>
-T * trie<T>::get_label(){
-    
-        // Return the label only if node IS NOT the root (meaning it has a parent)
-        if(this->m_p != nullptr){
-            return this->m_l;
-        }
-    
-        return nullptr;
+T* trie<T>::get_label() {
+   // Return the label only if node IS NOT the root (meaning it has a parent)
+   if (this->m_p != nullptr) {
+      return this->m_l;
+   }
+
+   return nullptr;
 }
 
 template <typename T>
-void trie<T>::set_parent(trie<T>* p){   
-    this->m_p = p;
+void trie<T>::set_parent(trie<T>* p) {
+   this->m_p = p;
 }
 
 template <typename T>
 const trie<T>* trie<T>::get_parent() const {
-    return this->m_p;
+   return this->m_p;
 }
 
 template <typename T>
 trie<T>* trie<T>::get_parent() {
-    return this->m_p;
+   return this->m_p;
 }
 
 template <typename T>
-void trie<T>::add_child(trie<T> const& c){
+void trie<T>::add_child(trie<T> const& c) {
+   // Should have a valid label before being added
+   if (c.get_label() == nullptr) {
+      throw parser_exception(
+          "Child node should have a valid label before being added");
+   }
 
-    // Should have a valid label before being added
-    if(c.get_label() == nullptr){
-        throw parser_exception("Child node should have a valid label before being added");
-    }
+   // Should have a valid parent before being added
+   if (c.get_parent() == nullptr) {
+      throw parser_exception(
+          "Child node should have a valid parent before being added");
+   }
 
-    // Should have a valid parent before being added
-    if(c.get_parent() == nullptr){
-        throw parser_exception("Child node should have a valid parent before being added");
-    }
+   // Check if there are any siblings with the same label
+   if (this->m_c.getWithLabel(*c.get_label()) != nullptr) {
+      throw parser_exception(
+          "Invalid input: a node with the same label already exists");
+   }
 
-    // Check if there are any siblings with the same label
-    if(this->m_c.getWithLabel(*c.get_label()) != nullptr){
-        throw parser_exception("Invalid input: a node with the same label already exists");
-    }
+   // If current node has a weight, we need to remove it (because non-leaf
+   // nodes can't have a weight)
+   if (this->m_w != 0.0) {
+      this->m_w = 0.0;
+   }
 
+   trie<T>* p_child = new trie<T>(c);
+   p_child->set_parent(this);
 
-    // If current node has a weight, we need to remove it (because non-leaf nodes can't have a weight)
-    if(this->m_w != 0.0){
-        this->m_w = 0.0;
-    }
-
-    trie<T>* p_child = new trie<T>(c);
-    p_child->set_parent(this);
-
-    this->m_c.add(p_child);
+   this->m_c.add(p_child);
 }
 
 template <typename T>
-bag<trie<T>> const& trie<T>::get_children() const{
-    return this->m_c;
+bag<trie<T>> const& trie<T>::get_children() const {
+   return this->m_c;
 }
 
 template <typename T>
-bag<trie<T>> & trie<T>::get_children() {
-    return this->m_c;
+bag<trie<T>>& trie<T>::get_children() {
+   return this->m_c;
 }
 
 template <typename T>
-trie<T>::trie(){
-    this->m_p = nullptr;
-    this->m_l = nullptr;
-    this->m_w = 0.0;
+trie<T>::trie() {
+   this->m_p = nullptr;
+   this->m_l = nullptr;
+   this->m_w = 0.0;
 }
 
 template <typename T>
-trie<T>::trie(double w){
-    this->m_p = nullptr;
-    this->m_l = nullptr;
-    this->m_w = w;
+trie<T>::trie(double w) {
+   this->m_p = nullptr;
+   this->m_l = nullptr;
+   this->m_w = w;
 }
 
 template <typename T>
-trie<T>::trie(trie<T> const& other){ 
+trie<T>::trie(trie<T> const& other) {
+   if (other.get_label() == nullptr) {
+      this->m_l = nullptr;
+   } else {
+      this->m_l = new T(*other.get_label());
+   }
 
-    if(other.get_label() == nullptr){
-        this->m_l = nullptr;
-    } else {
-        this->m_l = new T(*other.get_label());
-    }
+   this->m_w = other.get_weight();
 
-    this->m_w = other.get_weight();
+   // Parent is not copied because it could have another one. We need to set it
+   // manually.
+   this->m_p = nullptr;
 
-    // Parent is not copied because it could have another one. We need to set it manually.
-    this->m_p = nullptr;
+   // This copy-construct also the childrens
+   this->m_c = other.get_children();
 
-    // This copy-construct also the childrens
-    this->m_c = other.get_children();
-
-    this->m_c.setParent(this);
-
+   this->m_c.setParent(this);
 }
 
 template <typename T>
-trie<T>::trie(trie<T>&& other){
-    this->m_l = other.m_l;
-    this->m_w = other.m_w;
-    this->m_p = other.m_p;
+trie<T>::trie(trie<T>&& other) {
+   this->m_l = other.m_l;
+   this->m_w = other.m_w;
+   this->m_p = other.m_p;
 
-    this->m_c = std::move(other.m_c);
+   this->m_c = std::move(other.m_c);
 
-    other.m_l = nullptr;
-    other.m_p = nullptr;
+   other.m_l = nullptr;
+   other.m_p = nullptr;
 }
 
 template <typename T>
-trie<T>::~trie(){
-    
-    delete this->m_l;
+trie<T>::~trie() {
+   delete this->m_l;
 
-    // Set pointers to null. We can use this to check via debugger if something is actually been de-allocated
-    this->m_p = nullptr;
-    this->m_l = nullptr;
-    this->m_w = 0.0;
+   // Set pointers to null. We can use this to check via debugger if something
+   // is actually been de-allocated
+   this->m_p = nullptr;
+   this->m_l = nullptr;
+   this->m_w = 0.0;
 }
 
 template <typename T>
-trie<T>& trie<T>::operator=(trie<T> const& other){
+trie<T>& trie<T>::operator=(trie<T> const& other) {
+   this->m_w = other.get_weight();
 
-    this->m_w = other.get_weight();
+   this->m_c = other.get_children();
+   this->m_c.setParent(this);
 
-    this->m_c = other.get_children();
-    this->m_c.setParent(this);
-
-    return *this;
+   return *this;
 }
 
 template <typename T>
-trie<T>& trie<T>::operator=(trie<T> && other){
+trie<T>& trie<T>::operator=(trie<T>&& other) {
+   this->m_w = other.get_weight();
 
-    this->m_w = other.get_weight();
+   this->m_c = std::move(other.m_c);
 
-    this->m_c = std::move(other.m_c);
-
-    return *this;
+   return *this;
 }
 
 template <typename T>
-bool areChildrenEqual(bag<trie<T>> const& c1, bag<trie<T>> const& c2){
+bool areChildrenEqual(bag<trie<T>> const& c1, bag<trie<T>> const& c2) {
+   if (c1.size() != c2.size()) {
+      return false;
+   }
 
-    if(c1.size() != c2.size()){
-        return false;
-    }
+   for (int i = 0; i < c1.size(); i++) {
+      trie<T>* child1 = c1.get(i);
+      trie<T>* child2 = c2.get(i);
 
-    for(int i = 0; i < c1.size(); i++){
-        trie<T> * child1 = c1.get(i);
-        trie<T> * child2 = c2.get(i);
+      if (*child1->get_label() != *child2->get_label() ||
+          child1->get_weight() != child2->get_weight()) {
+         return false;
+      }
 
-        if(*child1->get_label() != *child2->get_label() || child1->get_weight() != child2->get_weight()){
-            return false;
-        }
+      if (!areChildrenEqual(child1->get_children(), child2->get_children())) {
+         return false;
+      }
+   }
 
-        if(!areChildrenEqual(child1->get_children(), child2->get_children())){
-            return false;
-        }
-    }
-
-    return true;
+   return true;
 }
 
 template <typename T>
-bool trie<T>::operator==(trie<T> const& other) const{
+bool trie<T>::operator==(trie<T> const& other) const {
+   // If one is root and the other is not, they are not equal
+   if (this->m_l == nullptr && other.get_label() != nullptr ||
+       this->m_l != nullptr && other.get_label() == nullptr) {
+      return false;
+   }
 
-    // If one is root and the other is not, they are not equal
-    if(this->m_l == nullptr && other.get_label() != nullptr || this->m_l != nullptr && other.get_label() == nullptr){
-        return false;
-    }
+   // If both are root, we need to check if they have the same children and the
+   // same weight
+   if (this->m_l == nullptr && other.get_label() == nullptr) {
+      return this->m_w == other.get_weight() &&
+             areChildrenEqual(this->m_c, other.get_children());
+   }
 
-    // If both are root, we need to check if they have the same children and the same weight
-    if(this->m_l == nullptr && other.get_label() == nullptr){
-        return this->m_w == other.get_weight() && areChildrenEqual(this->m_c, other.get_children());
-    }
+   // If both are non-root, we need to check if they have the same label and
+   // weight
+   if (*this->m_l != *other.get_label() || this->m_w != other.get_weight()) {
+      return false;
+   }
 
-    // If both are non-root, we need to check if they have the same label and weight
-    if(*this->m_l != *other.get_label() || this->m_w != other.get_weight()){
-        return false;
-    }
-
-    // Finally, we need to check if they have the same children
-    return areChildrenEqual(this->m_c, other.get_children());
+   // Finally, we need to check if they have the same children
+   return areChildrenEqual(this->m_c, other.get_children());
 }
 
 template <typename T>
-bool trie<T>::operator!=(trie<T> const& other) const{
-    return !(*this == other);
+bool trie<T>::operator!=(trie<T> const& other) const {
+   return !(*this == other);
 }
 
 template <typename T>
-trie<T>& trie<T>::operator[](std::vector<T> const& path){
-    trie<T>* current = this;
+trie<T>& trie<T>::operator[](std::vector<T> const& path) {
+   trie<T>* current = this;
 
-    for(T label : path){
+   for (T label : path) {
+      trie<T>* tmp = current->get_children().getWithLabel(label);
 
-        trie<T>* tmp = current->get_children().getWithLabel(label);
+      if (tmp != nullptr) {
+         current = tmp;
+      } else {
+         break;
+      }
+   }
 
-        if(tmp != nullptr){
-            current = tmp;
-        } else {
-            break;
-        }
-    }
-
-    return *current;
+   return *current;
 }
 
 template <typename T>
 trie<T> const& trie<T>::operator[](std::vector<T> const& path) const {
-    const trie<T>* current = this;
+   const trie<T>* current = this;
 
-    for(T label : path){
+   for (T label : path) {
+      const trie<T>* tmp = current->get_children().getWithLabel(label);
 
-        const trie<T>* tmp = current->get_children().getWithLabel(label);
+      if (tmp != nullptr) {
+         current = tmp;
+      } else {
+         break;
+      }
+   }
 
-        if(tmp != nullptr){
-            current = tmp;
-        } else {
-            break;
-        }
-    }
-
-    return *current;
+   return *current;
 }
 
-void cleanString(string& str){
+void cleanString(string& str) {
+   int firstChar = str.find_first_not_of(" \t\n");
 
-    int firstChar = str.find_first_not_of(" \t\n");
+   int lastChar = str.find_last_not_of(" \t\n");
 
-    int lastChar = str.find_last_not_of(" \t\n");
+   if (firstChar == string::npos || lastChar == string::npos) {
+      return;
+   }
 
-    if(firstChar == string::npos || lastChar == string::npos){
-        return;
-    }
+   string newStr = str.substr(firstChar, lastChar - firstChar + 1);
 
-    string newStr = str.substr(firstChar, lastChar - firstChar + 1);
+   // If the new string still has spaces, tabs or newlines, it means that the
+   // keyword is not well formatted
+   if (newStr.find(' ') != string::npos || newStr.find('\t') != string::npos ||
+       newStr.find('\n') != string::npos) {
+      throw parser_exception(
+          "Invalid input: keywords can't have spaces, tabs or newlines in "
+          "the middle of the string");
+   }
 
-    //If the new string still has spaces, tabs or newlines, it means that the keyword is not well formatted
-    if(newStr.find(' ') != string::npos || newStr.find('\t') != string::npos || newStr.find('\n') != string::npos){
-        throw parser_exception("Invalid input: keywords can't have spaces, tabs or newlines in the middle of the string");
-    }
-
-    str = newStr;
+   str = newStr;
 }
 
-string getNextChunk(istream& is){
-    string chunk;
-    getline(is, chunk, ' ');
+string getNextChunk(istream& is) {
+   string chunk;
+   getline(is, chunk, ' ');
 
-    cleanString(chunk);
+   cleanString(chunk);
 
-    while(chunk == "" || chunk == "\n" || chunk == "\t"){
-        getline(is, chunk, ' ');
-    }
+   while (chunk == "" || chunk == "\n" || chunk == "\t") {
+      getline(is, chunk, ' ');
+   }
 
-    return chunk;
+   return chunk;
 }
 
-char getNextChar(istream& is){
-    char nextChar;
-    is>>nextChar;
+char getNextChar(istream& is) {
+   char nextChar;
+   is >> nextChar;
 
-    while(nextChar == ' ' || nextChar == '\n' || nextChar == '\t'){
-         is>>nextChar;
-    }
+   while (nextChar == ' ' || nextChar == '\n' || nextChar == '\t') {
+      is >> nextChar;
+   }
 
-    return nextChar;
+   return nextChar;
 }
 
-void C(istream& is){
-    string firstChunk = getNextChunk(is);
+void C(istream& is) {
+   string firstChunk = getNextChunk(is);
 
-    if(firstChunk == "children"){
-        // We have a label and a weight
-    } else {
-        throw parser_exception("Invalid input: expected children but got something else (this usually happens when a node has another property other than weight and label)");
-    }
+   if (firstChunk == "children") {
+      // We have a label and a weight
+   } else {
+      throw parser_exception(
+          "Invalid input: expected children but got something else (this "
+          "usually happens when a node has another property other than "
+          "weight and label)");
+   }
 }
 
 template <typename T>
-void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie){
-    string firstChunk = getNextChunk(is);
+void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie) {
+   string firstChunk = getNextChunk(is);
 
-    if(firstChunk == "children"){
-        // We have only a label
+   if (firstChunk == "children") {
+      // We have only a label
 
-    } else{
-        // We have a label and a weight
+   } else {
+      // We have a label and a weight
 
-        //Check if weight is double
-        try{
-            currentTrie.set_weight(stod(firstChunk));
-        } catch(invalid_argument e){
-            throw parser_exception("Invalid input: weight should be a double");
-        }
+      // Check if weight is double
+      try {
+         currentTrie.set_weight(stod(firstChunk));
+      } catch (invalid_argument e) {
+         throw parser_exception("Invalid input: weight should be a double");
+      }
 
-        shouldEspectLeaf = true;
-    
-        C(is);
+      shouldEspectLeaf = true;
 
-    }
+      C(is);
+   }
 }
 
 template <typename T>
@@ -361,239 +358,226 @@ template <typename T>
 void S(istream& is, trie<T>& currentTrie);
 
 template <typename T>
-void R(istream& is, bool shouldEspectLeaf, trie<T>& currentTrie){
+void R(istream& is, bool shouldEspectLeaf, trie<T>& currentTrie) {
+   char nextChar = getNextChar(is);
+   if (nextChar == '}') {
+      // We have a leaf
 
-    char nextChar = getNextChar(is);
-    if(nextChar == '}'){
-        // We have a leaf
+      if (!shouldEspectLeaf) {
+         throw parser_exception(
+             "Invalid input: a leaf node must have a weight");
+      }
 
-        if(!shouldEspectLeaf){
-            throw parser_exception("Invalid input: a leaf node must have a weight");
-        }
+      is.unget();
+   } else {
+      // We have a node
 
-        is.unget();
-    } else {
-        // We have a node
+      if (shouldEspectLeaf) {
+         throw parser_exception(
+             "Invalid input: a non-leaf node must not have a weight");
+      }
 
-        if(shouldEspectLeaf){
-            throw parser_exception("Invalid input: a non-leaf node must not have a weight");
-        }
+      // Go back one character
+      is.unget();
 
-        //Go back one character
-        is.unget();
+      // Build the child
 
-        // Build the child
-        
-        auto it = currentTrie.root();
-        using ValueType = typename decltype(it)::value_type;
+      auto it = currentTrie.root();
+      using ValueType = typename decltype(it)::value_type;
 
+      trie<ValueType> child;
+      child.set_parent(&currentTrie);
+      S(is, child, currentTrie);
 
-        trie<ValueType> child;
-        child.set_parent(&currentTrie);
-        S(is, child, currentTrie);
-
-        // Add the new child to the parent trie we passed as an argument
-        currentTrie.add_child(child);
-    }
+      // Add the new child to the parent trie we passed as an argument
+      currentTrie.add_child(child);
+   }
 }
 
 template <typename T>
-void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie){
+void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
+   string firstChunk = getNextChunk(is);
 
+   bool shouldEspectLeaf = false;
 
-    string firstChunk = getNextChunk(is);
+   if (firstChunk == "children") {
+      // We are in the root
 
-    bool shouldEspectLeaf = false;
+      throw parser_exception(
+          "Invalid input: non-root nodes should have a label");
 
-    if(firstChunk == "children"){
-        // We are in the root
+   } else {
+      // We are in a child and firstChunk is a label
 
-        throw parser_exception("Invalid input: non-root nodes should have a label");
+      if (firstChunk.find('}') != string::npos ||
+          firstChunk.find('{') != string::npos ||
+          firstChunk.find('=') != string::npos ||
+          firstChunk.find(',') != string::npos) {
+         throw parser_exception(
+             "Invalid input: got unexpected character in the beginning of "
+             "the string");
+      }
 
+      using trieType = decay_t<T>;
 
-    } else {
-        // We are in a child and firstChunk is a label 
-
-        if(firstChunk.find('}') != string::npos || firstChunk.find('{') != string::npos || firstChunk.find('=') != string::npos || firstChunk.find(',') != string::npos){
-            throw parser_exception("Invalid input: got unexpected character in the beginning of the string");
-        }
-
-        using trieType = decay_t<T>;
-
-        try{
-            if constexpr (is_same_v<trieType, string>){
-                currentTrie.set_label(new trieType(firstChunk));
-            } else if constexpr (is_same_v<trieType, char>) {
-
-                if(firstChunk.size() != 1){
-                    throw parser_exception("Invalid input: char label can only have one character");
-                }
-
-                currentTrie.set_label(new trieType(firstChunk[0]));
-            } else if constexpr (is_integral_v<trieType>){
-
-                if(firstChunk.find('.') != string::npos){
-                    throw parser_exception("Invalid input: label type is an integer, but got a floating point number");
-                }
-
-                trieType value = stoi(firstChunk);
-
-                currentTrie.set_label(new trieType(value));
-            }else if constexpr (is_floating_point_v<trieType>){
-
-                trieType value = stod(firstChunk);
-
-                currentTrie.set_label(new trieType(value));
+      try {
+         if constexpr (is_same_v<trieType, string>) {
+            currentTrie.set_label(new trieType(firstChunk));
+         } else if constexpr (is_same_v<trieType, char>) {
+            if (firstChunk.size() != 1) {
+               throw parser_exception(
+                   "Invalid input: char label can only have one "
+                   "character");
             }
-            
-            else {
-                throw parser_exception("Invalid input: label type not supported");
+
+            currentTrie.set_label(new trieType(firstChunk[0]));
+         } else if constexpr (is_integral_v<trieType>) {
+            if (firstChunk.find('.') != string::npos) {
+               throw parser_exception(
+                   "Invalid input: label type is an integer, but got a "
+                   "floating point number");
             }
-        } catch(invalid_argument e){
-            throw parser_exception("Error while parsing label");
-        }
-        
 
-        B(is, shouldEspectLeaf, currentTrie);
-    }
+            trieType value = stoi(firstChunk);
 
+            currentTrie.set_label(new trieType(value));
+         } else if constexpr (is_floating_point_v<trieType>) {
+            trieType value = stod(firstChunk);
 
-    /* Here we correctly set label and weight */
+            currentTrie.set_label(new trieType(value));
+         }
 
+         else {
+            throw parser_exception("Invalid input: label type not supported");
+         }
+      } catch (invalid_argument e) {
+         throw parser_exception("Error while parsing label");
+      }
 
-    // Check if there is "="
-    char equalChar = getNextChar(is);
-    if(equalChar != '='){
-        throw parser_exception("Invalid input: expected = but got something else");
-    }
+      B(is, shouldEspectLeaf, currentTrie);
+   }
 
-    // Check if there is "{"
-    char firstChar = getNextChar(is);
-    if(firstChar != '{'){
-        throw parser_exception("Invalid input: expected { but got something else");
-    }
+   /* Here we correctly set label and weight */
 
-    R(is, shouldEspectLeaf, currentTrie);
+   // Check if there is "="
+   char equalChar = getNextChar(is);
+   if (equalChar != '=') {
+      throw parser_exception(
+          "Invalid input: expected = but got something else");
+   }
 
+   // Check if there is "{"
+   char firstChar = getNextChar(is);
+   if (firstChar != '{') {
+      throw parser_exception(
+          "Invalid input: expected { but got something else");
+   }
 
-    // Check if there is "}"
-    char secondChar = getNextChar(is);
-    if(secondChar != '}'){
-        throw parser_exception("Invalid input: expected } but got something else");
-    }
+   R(is, shouldEspectLeaf, currentTrie);
 
+   // Check if there is "}"
+   char secondChar = getNextChar(is);
+   if (secondChar != '}') {
+      throw parser_exception(
+          "Invalid input: expected } but got something else");
+   }
 
+   /* Here we correctly inserted all children */
 
-    /* Here we correctly inserted all children */
+   // Check if there is ","
+   char thirdChar = getNextChar(is);
+   if (thirdChar == ',') {
+      // We have a sibling
 
+      auto it = currentTrie.root();
+      using ValueType = typename decltype(it)::value_type;
 
-    // Check if there is ","
-    char thirdChar = getNextChar(is);
-    if(thirdChar == ','){
+      trie<ValueType> sibling;
 
-        // We have a sibling
+      sibling.set_parent(&parentTrie);
 
-        auto it = currentTrie.root();
-        using ValueType = typename decltype(it)::value_type;
+      S(is, sibling, parentTrie);
 
-        trie<ValueType> sibling;
+      // Add the new sibling to the parent trie we passed as an argument
+      parentTrie.add_child(sibling);
 
-        sibling.set_parent(&parentTrie);
-
-        S(is, sibling, parentTrie);
-
-        // Add the new sibling to the parent trie we passed as an argument
-        parentTrie.add_child(sibling);
-
-    } else {
-        // We need to go back one character, because we already read the next pharentesis
-        is.unget();
-    }
-    
+   } else {
+      // We need to go back one character, because we already read the next
+      // pharentesis
+      is.unget();
+   }
 }
 
 template <typename T>
-void S(istream& is, trie<T>& currentTrie){
-    string firstChunk = getNextChunk(is);
+void S(istream& is, trie<T>& currentTrie) {
+   string firstChunk = getNextChunk(is);
 
-    bool shouldEspectLeaf = false;
+   bool shouldEspectLeaf = false;
 
-    if(firstChunk == "children"){
-        // We are in the root
+   if (firstChunk == "children") {
+      // We are in the root
 
+   } else {
+      throw parser_exception(
+          "Invalid input: root node should start with children keyword");
+   }
 
-    } else {
-        
+   /* Here we correctly set label and weight */
 
-        throw parser_exception("Invalid input: root node should start with children keyword");
+   // Check if there is "="
+   char equalChar = getNextChar(is);
+   if (equalChar != '=') {
+      throw parser_exception(
+          "Invalid input: expected = but got something else");
+   }
 
-    }
+   // Check if there is "{"
+   char firstChar = getNextChar(is);
+   if (firstChar != '{') {
+      throw parser_exception(
+          "Invalid input: expected { but got something else");
+   }
 
+   R(is, shouldEspectLeaf, currentTrie);
 
-    /* Here we correctly set label and weight */
+   // Check if there is "}"
+   char secondChar = getNextChar(is);
+   if (secondChar != '}') {
+      throw parser_exception(
+          "Invalid input: expected } but got something else");
+   }
 
+   /* Here we correctly inserted all children */
 
-    // Check if there is "="
-    char equalChar = getNextChar(is);
-    if(equalChar != '='){
-        throw parser_exception("Invalid input: expected = but got something else");
-    }
+   // Check if there is ","
+   char thirdChar = getNextChar(is);
+   if (thirdChar == ',') {
+      // We have a sibling
 
-    // Check if there is "{"
-    char firstChar = getNextChar(is);
-    if(firstChar != '{'){
-        throw parser_exception("Invalid input: expected { but got something else");
-    }
+      throw parser_exception(
+          "Invalid input: root node should not have siblings");
 
-    R(is, shouldEspectLeaf, currentTrie);
-
-    // Check if there is "}"
-    char secondChar = getNextChar(is);
-    if(secondChar != '}'){
-        throw parser_exception("Invalid input: expected } but got something else");
-    }
-
-
-
-    /* Here we correctly inserted all children */
-
-
-    // Check if there is ","
-    char thirdChar = getNextChar(is);
-    if(thirdChar == ','){
-        // We have a sibling
-
-        throw parser_exception("Invalid input: root node should not have siblings");
-
-
-    } else {
-        // We need to go back one character, because we already read the next pharentesis
-        is.unget();
-    }
-
-
+   } else {
+      // We need to go back one character, because we already read the next
+      // pharentesis
+      is.unget();
+   }
 }
 
-
-
-
-
 template <typename T>
-istream& operator>>(std::istream& stream, trie<T>& trie){
+istream& operator>>(std::istream& stream, trie<T>& trie) {
+   // TODO: Add label type checking = T
 
-    //TODO: Add label type checking = T
+   // If file is empty
+   if (stream.peek() == EOF) {
+      throw parser_exception("File is empty");
+      return stream;
+   }
 
-    //If file is empty
-    if(stream.peek() == EOF){
-        throw parser_exception("File is empty");
-        return stream;
-    }
-    
-    S(stream, trie);
-    cout<<"Parsing successful"<<endl;
+   S(stream, trie);
+   cout << "Parsing successful" << endl;
 
-
-    return stream;
+   return stream;
 }
 
 template <typename T>
@@ -601,436 +585,402 @@ trie<T>::node_iterator::node_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 
 template <typename T>
 typename trie<T>::node_iterator& trie<T>::node_iterator::operator++() {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_p == nullptr) {
+      throw parser_exception("Node has no parent");
+   }
 
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_p == nullptr){
-        throw parser_exception("Node has no parent");
-    }
+   m_ptr = m_ptr->m_p;
 
-    m_ptr = m_ptr->m_p;
-
-    return *this;
+   return *this;
 }
 
 template <typename T>
 typename trie<T>::node_iterator trie<T>::node_iterator::operator++(int) {
-    node_iterator ob = *this;
+   node_iterator ob = *this;
 
-    ++(*this);
+   ++(*this);
 
-    return ob;
+   return ob;
 }
 
 template <typename T>
-typename trie<T>::node_iterator::reference trie<T>::node_iterator::operator*() const {
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_l == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return *m_ptr->m_l;
+typename trie<T>::node_iterator::reference trie<T>::node_iterator::operator*()
+    const {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_l == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return *m_ptr->m_l;
 }
 
 template <typename T>
-typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->() const {
-    if(m_ptr == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return m_ptr->m_l;
+typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->()
+    const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return m_ptr->m_l;
 }
 
 template <typename T>
 bool trie<T>::node_iterator::operator==(node_iterator const& node) const {
-    return this->m_ptr == node.m_ptr;
+   return this->m_ptr == node.m_ptr;
 }
 
 template <typename T>
 bool trie<T>::node_iterator::operator!=(node_iterator const& node) const {
-    return this->m_ptr != node.m_ptr;
-}
-
-
-template <typename T>
-trie<T>::const_node_iterator::const_node_iterator(trie<T> const* ptr) : m_ptr(ptr) {}
-
-template <typename T>
-typename trie<T>::const_node_iterator& trie<T>::const_node_iterator::operator++() {
-
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_p == nullptr){
-        throw parser_exception("Node has no parent");
-    }
-
-    m_ptr = m_ptr->m_p;
-
-    return *this;
+   return this->m_ptr != node.m_ptr;
 }
 
 template <typename T>
-typename trie<T>::const_node_iterator trie<T>::const_node_iterator::operator++(int) {
-    const_node_iterator ob = *this;
+trie<T>::const_node_iterator::const_node_iterator(trie<T> const* ptr)
+    : m_ptr(ptr) {}
 
-    ++(*this);
+template <typename T>
+typename trie<T>::const_node_iterator&
+trie<T>::const_node_iterator::operator++() {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_p == nullptr) {
+      throw parser_exception("Node has no parent");
+   }
 
-    return ob;
+   m_ptr = m_ptr->m_p;
+
+   return *this;
 }
 
 template <typename T>
-typename trie<T>::const_node_iterator::reference trie<T>::const_node_iterator::operator*() const {
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_l == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return *m_ptr->m_l;
+typename trie<T>::const_node_iterator trie<T>::const_node_iterator::operator++(
+    int) {
+   const_node_iterator ob = *this;
+
+   ++(*this);
+
+   return ob;
 }
 
 template <typename T>
-typename trie<T>::const_node_iterator::pointer trie<T>::const_node_iterator::operator->() const {
-    if(m_ptr == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return m_ptr->m_l;
+typename trie<T>::const_node_iterator::reference
+trie<T>::const_node_iterator::operator*() const {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_l == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return *m_ptr->m_l;
 }
 
 template <typename T>
-bool trie<T>::const_node_iterator::operator==(const_node_iterator const& node) const {
-    return this->m_ptr == node.m_ptr;
+typename trie<T>::const_node_iterator::pointer
+trie<T>::const_node_iterator::operator->() const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return m_ptr->m_l;
 }
 
 template <typename T>
-bool trie<T>::const_node_iterator::operator!=(const_node_iterator const& node) const {
-    return this->m_ptr != node.m_ptr;
+bool trie<T>::const_node_iterator::operator==(
+    const_node_iterator const& node) const {
+   return this->m_ptr == node.m_ptr;
 }
 
+template <typename T>
+bool trie<T>::const_node_iterator::operator!=(
+    const_node_iterator const& node) const {
+   return this->m_ptr != node.m_ptr;
+}
 
 template <typename T>
 trie<T>::leaf_iterator::leaf_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 
 template <typename T>
-typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*() const {
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_l == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return *m_ptr->m_l;
+typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*()
+    const {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_l == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return *m_ptr->m_l;
 }
 
 template <typename T>
-typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->() const {
-    if(m_ptr == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return m_ptr->m_l;
+typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->()
+    const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return m_ptr->m_l;
 }
 
 template <typename T>
 bool trie<T>::leaf_iterator::operator==(leaf_iterator const& node) const {
-    return this->m_ptr == node.m_ptr;
+   return this->m_ptr == node.m_ptr;
 }
 
 template <typename T>
 bool trie<T>::leaf_iterator::operator!=(leaf_iterator const& node) const {
-    return this->m_ptr != node.m_ptr;
+   return this->m_ptr != node.m_ptr;
 }
 
 template <typename T>
-trie<T> * findNextLeaf(trie<T>* current, trie<T>* root, bool& foundCurrent){
+trie<T>* findNextLeaf(trie<T>* current, trie<T>* root, bool& foundCurrent) {
+   if (root == nullptr) {
+      return nullptr;
+   }
 
-    if(root == nullptr){
-        return nullptr;
-    }
+   if (root->get_children().size() == 0) {
+      if (foundCurrent) {
+         return root;
+      }
+      if (root == current) {
+         foundCurrent = true;
+      }
+      return nullptr;
+   }
 
-    if(root->get_children().size() == 0){
-        if(foundCurrent){
-            return root;
-        }
-        if(root == current){
-            foundCurrent = true;
-        }   
-        return nullptr;
-    }
+   for (int i = 0; i < root->get_children().size(); i++) {
+      trie<T>* node =
+          findNextLeaf(current, root->get_children().get(i), foundCurrent);
+      if (node != nullptr) {
+         return node;
+      }
+   }
 
-
-    for(int i = 0; i < root->get_children().size(); i++){
-        trie<T>* node = findNextLeaf(current, root->get_children().get(i), foundCurrent);
-        if(node != nullptr){
-            return node;
-        }
-    }
-
-    return nullptr;
-
+   return nullptr;
 }
-
 
 template <typename T>
 typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
+   trie<T>* root = m_ptr->m_p;
+   while (root->get_parent() != nullptr) {
+      root = root->m_p;
+   }
 
-    trie<T>* root = m_ptr->m_p;
-    while(root->get_parent() != nullptr){
-        root = root->m_p;
-    }
-    
-    bool foundCurrent = false;
-    trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
+   bool foundCurrent = false;
+   trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
 
-    m_ptr = nextLeaf;
+   m_ptr = nextLeaf;
 
-    return *this;
+   return *this;
 }
 
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::leaf_iterator::operator++(int) {
-    leaf_iterator ob = *this;
+   leaf_iterator ob = *this;
 
-    ++(*this);
+   ++(*this);
 
-    return ob;
+   return ob;
 }
 
 template <typename T>
 trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
-    
-    trie<T>* tr = m_ptr;
+   trie<T>* tr = m_ptr;
 
-    return node_iterator(tr);
+   return node_iterator(tr);
 }
 
 template <typename T>
 trie<T>& trie<T>::leaf_iterator::get_leaf() const {
-    
-    return *m_ptr;
-}
-
-
-
-
-
-
-
-
-template <typename T>
-trie<T>::const_leaf_iterator::const_leaf_iterator(const trie<T>* ptr) : m_ptr(ptr) {}
-
-template <typename T>
-typename trie<T>::const_leaf_iterator::reference trie<T>::const_leaf_iterator::operator*() const {
-    //TODO: Don't know if i should do this
-    if(m_ptr->m_l == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return *m_ptr->m_l;
+   return *m_ptr;
 }
 
 template <typename T>
-typename trie<T>::const_leaf_iterator::pointer trie<T>::const_leaf_iterator::operator->() const {
-    if(m_ptr == nullptr){
-        throw parser_exception("Invalid input: node has no label");
-    }
-    return m_ptr->m_l;
+trie<T>::const_leaf_iterator::const_leaf_iterator(const trie<T>* ptr)
+    : m_ptr(ptr) {}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator::reference
+trie<T>::const_leaf_iterator::operator*() const {
+   // TODO: Don't know if i should do this
+   if (m_ptr->m_l == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return *m_ptr->m_l;
 }
 
 template <typename T>
-bool trie<T>::const_leaf_iterator::operator==(const_leaf_iterator const& node) const {
-    return this->m_ptr == node.m_ptr;
+typename trie<T>::const_leaf_iterator::pointer
+trie<T>::const_leaf_iterator::operator->() const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Invalid input: node has no label");
+   }
+   return m_ptr->m_l;
 }
 
 template <typename T>
-bool trie<T>::const_leaf_iterator::operator!=(const_leaf_iterator const& node) const {
-    return this->m_ptr != node.m_ptr;
-}
-
-
-template <typename T>
-const trie<T> * findNextLeaf(const trie<T>* current, const trie<T>* root, bool& foundCurrent){
-
-    if(root == nullptr){
-        return nullptr;
-    }
-
-    if(root->get_children().size() == 0){
-        if(foundCurrent){
-            return root;
-        }
-        if(root == current){
-            foundCurrent = true;
-        }   
-        return nullptr;
-    }
-
-
-    for(int i = 0; i < root->get_children().size(); i++){
-        const trie<T>* node = findNextLeaf(current, root->get_children().get(i), foundCurrent);
-        if(node != nullptr){
-            return node;
-        }
-    }
-
-    return nullptr;
-
+bool trie<T>::const_leaf_iterator::operator==(
+    const_leaf_iterator const& node) const {
+   return this->m_ptr == node.m_ptr;
 }
 
 template <typename T>
-typename trie<T>::const_leaf_iterator& trie<T>::const_leaf_iterator::operator++() {
-
-    const trie<T>* root = m_ptr->m_p;
-    while(root->get_parent() != nullptr){
-        root = root->m_p;
-    }
-    
-    bool foundCurrent = false;
-    const trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
-
-    m_ptr = nextLeaf;
-
-    return *this;
+bool trie<T>::const_leaf_iterator::operator!=(
+    const_leaf_iterator const& node) const {
+   return this->m_ptr != node.m_ptr;
 }
 
 template <typename T>
-typename trie<T>::const_leaf_iterator trie<T>::const_leaf_iterator::operator++(int) {
-    const_leaf_iterator ob = *this;
+const trie<T>* findNextLeaf(const trie<T>* current, const trie<T>* root,
+                            bool& foundCurrent) {
+   if (root == nullptr) {
+      return nullptr;
+   }
 
-    ++(*this);
+   if (root->get_children().size() == 0) {
+      if (foundCurrent) {
+         return root;
+      }
+      if (root == current) {
+         foundCurrent = true;
+      }
+      return nullptr;
+   }
 
-    return ob;
+   for (int i = 0; i < root->get_children().size(); i++) {
+      const trie<T>* node =
+          findNextLeaf(current, root->get_children().get(i), foundCurrent);
+      if (node != nullptr) {
+         return node;
+      }
+   }
+
+   return nullptr;
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator&
+trie<T>::const_leaf_iterator::operator++() {
+   const trie<T>* root = m_ptr->m_p;
+   while (root->get_parent() != nullptr) {
+      root = root->m_p;
+   }
+
+   bool foundCurrent = false;
+   const trie<T>* nextLeaf = findNextLeaf(m_ptr, root, foundCurrent);
+
+   m_ptr = nextLeaf;
+
+   return *this;
+}
+
+template <typename T>
+typename trie<T>::const_leaf_iterator trie<T>::const_leaf_iterator::operator++(
+    int) {
+   const_leaf_iterator ob = *this;
+
+   ++(*this);
+
+   return ob;
 }
 
 template <typename T>
 trie<T>::const_leaf_iterator::operator trie<T>::const_node_iterator() const {
-    
-    const trie<T>* tr = m_ptr;
+   const trie<T>* tr = m_ptr;
 
-    return const_node_iterator(tr);
+   return const_node_iterator(tr);
 }
 
 template <typename T>
 trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
-    
-    return *m_ptr;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-template <typename T>
-typename trie<T>::leaf_iterator trie<T>::begin(){
-    
-    trie<T> *  root = this;
-    while(root->m_p != nullptr){
-        root = root->m_p;
-    }
-
-    while(root->get_children().size() > 0){
-        root = root->get_children().get(0);
-    }
-
-    return leaf_iterator(root);
+   return *m_ptr;
 }
 
 template <typename T>
-typename trie<T>::leaf_iterator trie<T>::end(){
-    return leaf_iterator(nullptr);
+typename trie<T>::leaf_iterator trie<T>::begin() {
+   trie<T>* root = this;
+   while (root->m_p != nullptr) {
+      root = root->m_p;
+   }
+
+   while (root->get_children().size() > 0) {
+      root = root->get_children().get(0);
+   }
+
+   return leaf_iterator(root);
+}
+
+template <typename T>
+typename trie<T>::leaf_iterator trie<T>::end() {
+   return leaf_iterator(nullptr);
 }
 
 template <typename T>
 typename trie<T>::node_iterator trie<T>::root() {
-    
-    trie<T>* tr = this;
-    while(tr->get_parent() != nullptr){
-        tr = tr->m_p; 
-    }
+   trie<T>* tr = this;
+   while (tr->get_parent() != nullptr) {
+      tr = tr->m_p;
+   }
 
-    return node_iterator(tr);
+   return node_iterator(tr);
 }
 
 template <typename T>
-typename trie<T>::const_leaf_iterator trie<T>::begin() const{
-    
-    const trie<T> *  root = this;
-    while(root->m_p != nullptr){
-        root = root->m_p;
-    }
+typename trie<T>::const_leaf_iterator trie<T>::begin() const {
+   const trie<T>* root = this;
+   while (root->m_p != nullptr) {
+      root = root->m_p;
+   }
 
-    while(root->get_children().size() > 0){
-        root = root->get_children().get(0);
-    }
+   while (root->get_children().size() > 0) {
+      root = root->get_children().get(0);
+   }
 
-    return const_leaf_iterator(root);
+   return const_leaf_iterator(root);
 }
 
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::end() const {
-    return const_leaf_iterator(nullptr);
+   return const_leaf_iterator(nullptr);
 }
 
 template <typename T>
 typename trie<T>::const_node_iterator trie<T>::root() const {
-    
-    const trie<T>* tr = this;
-    while(tr->get_parent() != nullptr){
-        tr = tr->m_p; 
-    }
+   const trie<T>* tr = this;
+   while (tr->get_parent() != nullptr) {
+      tr = tr->m_p;
+   }
 
-    return const_node_iterator(tr);
+   return const_node_iterator(tr);
 }
-
-
-
 
 template <typename T>
 trie<T>& trie<T>::max() {
+   double maxWeight = 0.0;
+   leaf_iterator maxLeafIt = this->begin();
 
-    double maxWeight = 0.0;
-    leaf_iterator maxLeafIt = this->begin(); 
+   for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
+      const trie<T>& leaf = leaf_it.get_leaf();
+      if (leaf.get_weight() > maxWeight) {
+         maxWeight = leaf.get_weight();
+         maxLeafIt = leaf_it;
+      }
+   }
 
-
-    for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
-
-        const trie<T>& leaf = leaf_it.get_leaf();
-        if(leaf.get_weight() > maxWeight){
-            maxWeight = leaf.get_weight();
-            maxLeafIt = leaf_it;
-        }
-    }
-
-    return maxLeafIt.get_leaf();
+   return maxLeafIt.get_leaf();
 }
 
 template <typename T>
-const trie<T> & trie<T>::max() const{
+const trie<T>& trie<T>::max() const {
+   double maxWeight = 0.0;
+   const_leaf_iterator maxLeafIt = this->begin();
 
-    double maxWeight = 0.0;
-    const_leaf_iterator maxLeafIt = this->begin(); 
+   for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
+      const trie<T>& leaf = leaf_it.get_leaf();
 
+      if (leaf.get_weight() > maxWeight) {
+         maxWeight = leaf.get_weight();
+         maxLeafIt = leaf_it;
+      }
+   }
 
-    for (auto leaf_it = this->begin(); leaf_it != this->end(); ++leaf_it) {
-
-        const trie<T>& leaf = leaf_it.get_leaf();
-
-        if(leaf.get_weight() > maxWeight){
-            maxWeight = leaf.get_weight();
-            maxLeafIt = leaf_it;
-        }
-    }
-
-    return maxLeafIt.get_leaf();
+   return maxLeafIt.get_leaf();
 }
-
-
-
-
 
 // int main() {
 //     try{
-        
+
 //         // //FIXME: ONLY FOR TESTING REASONS
 //         // trie<char> t;
 //         // ifstream file("../test.txt");
@@ -1060,6 +1010,5 @@ const trie<T> & trie<T>::max() const{
 //         throw runtime_error(e.what());
 //         return 1;
 //     }
-
 
 // }
