@@ -164,7 +164,7 @@ trie<T>::~trie() {
 /* Copy Assignment Operator */
 template <typename T>
 trie<T>& trie<T>::operator=(trie<T> const& other) {
-   if (*this == &other) {
+   if (this == &other) {
       return *this;
    }
 
@@ -178,7 +178,7 @@ trie<T>& trie<T>::operator=(trie<T> const& other) {
 /* Move Assignment Operator */
 template <typename T>
 trie<T>& trie<T>::operator=(trie<T>&& other) {
-   if (*this == &other) {
+   if (this == &other) {
       return *this;
    }
 
@@ -300,6 +300,11 @@ void cleanString(string& str) {
 }
 
 string getNextChunk(istream& is) {
+
+   if (is.eof()) {
+      throw parser_exception("Unexpected end of file");
+   }
+
    string chunk;
    getline(is, chunk, ' ');
 
@@ -760,7 +765,7 @@ trie<T>* findNextLeaf(trie<T>* current, trie<T>* root, bool& foundCurrent) {
 
 template <typename T>
 typename trie<T>::leaf_iterator& trie<T>::leaf_iterator::operator++() {
-   trie<T>* root = m_ptr->m_p;
+   trie<T>* root = m_ptr;
    while (root->get_parent() != nullptr) {
       root = root->m_p;
    }
@@ -860,7 +865,8 @@ const trie<T>* findNextLeaf(const trie<T>* current, const trie<T>* root,
 template <typename T>
 typename trie<T>::const_leaf_iterator&
 trie<T>::const_leaf_iterator::operator++() {
-   const trie<T>* root = m_ptr->m_p;
+
+   const trie<T>* root = m_ptr;
    while (root->get_parent() != nullptr) {
       root = root->m_p;
    }
@@ -896,25 +902,6 @@ trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
 }
 
 template <typename T>
-typename trie<T>::leaf_iterator trie<T>::begin() {
-   trie<T>* root = this;
-   while (root->m_p != nullptr) {
-      root = root->m_p;
-   }
-
-   while (root->get_children().size() > 0) {
-      root = root->get_children().get(0);
-   }
-
-   return leaf_iterator(root);
-}
-
-template <typename T>
-typename trie<T>::leaf_iterator trie<T>::end() {
-   return leaf_iterator(nullptr);
-}
-
-template <typename T>
 typename trie<T>::node_iterator trie<T>::root() {
    trie<T>* tr = this;
    while (tr->get_parent() != nullptr) {
@@ -924,23 +911,86 @@ typename trie<T>::node_iterator trie<T>::root() {
    return node_iterator(tr);
 }
 
+
+
 template <typename T>
-typename trie<T>::const_leaf_iterator trie<T>::begin() const {
-   const trie<T>* root = this;
-   while (root->m_p != nullptr) {
+typename trie<T>::leaf_iterator trie<T>::begin() {
+   trie<T>* tr = this;
+
+   while (tr->get_children().size() > 0) {
+      tr = tr->get_children().get(0);
+   }
+
+   return leaf_iterator(tr);
+}
+
+
+template <typename T>
+typename trie<T>::leaf_iterator trie<T>::end() {
+   if(this->get_parent() == nullptr)
+      return leaf_iterator(nullptr);
+   
+   trie<T>* tr = this;
+   if(tr->get_children().size() == 0){
+      return leaf_iterator(nullptr);
+   }
+
+   while (tr->get_children().size() > 0) {
+      tr = tr->get_children().get(tr->get_children().size() - 1);
+   }
+
+   // Now tr is the last leaf that is still a child to the trie. We need to find the one next to tr.
+
+   trie<T>* root = this;
+   while (root->get_parent() != nullptr) {
       root = root->m_p;
    }
 
-   while (root->get_children().size() > 0) {
-      root = root->get_children().get(0);
+   bool foundCurrent = false;
+   trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
+
+
+   return leaf_iterator(nextLeaf);
+}
+
+
+template <typename T>
+typename trie<T>::const_leaf_iterator trie<T>::begin() const {
+   trie<T>* tr = this;
+
+   while (tr->get_children().size() > 0) {
+      tr = tr->get_children().get(0);
    }
 
-   return const_leaf_iterator(root);
+   return const_leaf_iterator(tr);
 }
 
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::end() const {
-   return const_leaf_iterator(nullptr);
+   if(this->get_parent() == nullptr)
+      return const_leaf_iterator(nullptr);
+   
+   trie<T>* tr = this;
+   if(tr->get_children().size() == 0){
+      return const_leaf_iterator(nullptr);
+   }
+
+   while (tr->get_children().size() > 0) {
+      tr = tr->get_children().get(tr->get_children().size() - 1);
+   }
+
+   // Now tr is the last leaf that is still a child to the trie. We need to find the one next to tr.
+
+   trie<T>* root = this;
+   while (root->get_parent() != nullptr) {
+      root = root->m_p;
+   }
+
+   bool foundCurrent = false;
+   trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
+
+
+   return const_leaf_iterator(nextLeaf);
 }
 
 template <typename T>
@@ -985,6 +1035,74 @@ const trie<T>& trie<T>::max() const {
 
    return maxLeafIt.get_leaf();
 }
+
+template <typename T>
+void addWithRecurion(trie<T> * tr, const trie<T> * other) {
+
+   if (tr->get_children().size() == 0) {
+      //We are in a leaf
+      if(other){
+
+         if(other->get_children().size() > 0){
+            double trWeight = tr->get_weight();
+            // Add all other's children to tr
+            for (typename bag<trie<T>>::const_child_iterator it = other->get_children().begin(); it != other->get_children().end(); ++it) {
+               tr->add_child(*it);
+            }
+
+            for(typename trie<T>::leaf_iterator leaf_it = tr->begin(); leaf_it != tr->end(); ++leaf_it){
+               leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() + trWeight);
+            }
+         } else {
+            // Sum the weights
+            tr->set_weight(tr->get_weight() + other->get_weight());
+         }
+
+
+
+        
+      }
+   } else {
+      if(other->get_children().size() > 0){
+         for (int i = 0; i < other->get_children().size(); i++) {
+            trie<T> * otherChild = other->get_children().get(i);
+            trie<T> * trChild = tr->get_children().getWithLabel(*otherChild->get_label());
+
+            if(!trChild){
+               tr->add_child(*otherChild);
+            } else {
+               addWithRecurion(trChild, otherChild);
+            }
+            
+         }
+      } else {
+         for(typename trie<T>::leaf_iterator leaf_it = tr->begin(); leaf_it != tr->end(); ++leaf_it){
+            leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() + other->get_weight());
+         }
+      }
+   }
+
+}
+
+template <typename T>
+trie<T> trie<T>::operator+(trie<T> const& other) const {
+   // Make return trie copy contructed from this
+   trie<T> newTrie = *this;
+
+   // Now, we need to add other
+   addWithRecurion(&newTrie, &other);
+
+   return newTrie;
+
+}
+
+template <typename T>
+trie<T>& trie<T>::operator+=(trie<T> const& other){
+   *this = *this + other;
+
+   return *this;
+}
+
 
 // int main() {
 //     try{

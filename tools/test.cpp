@@ -53,6 +53,8 @@ void test_parsing_validation() {
    parsing_should_throw_exception("trie_string_error4.tr", string());
 
    parsing_should_complete("trie_char1.tr", char());
+   parsing_should_complete("trie_char2.tr", char());
+   parsing_should_complete("trie_char3.tr", char());
    parsing_should_complete("trie_string.tr", string());
 }
 
@@ -211,10 +213,62 @@ void test_const_bag_iterator() {
    }
 }
 
+void test_trie_sum(){
+    try {
+      /* First test */
+      trie<char> t1 = load_trie<char>("sum/trie_01.tr");
+      trie<char> t2 = load_trie<char>("sum/trie_02.tr");
+      trie<char> expectedResult = load_trie<char>("sum/result_0.tr");
+      trie<char> actualResult = t1 + t2;
+      assert(expectedResult == actualResult);
+
+
+      t1 = load_trie<char>("sum/trie_11.tr");
+      t2 = load_trie<char>("sum/trie_12.tr");
+      expectedResult = load_trie<char>("sum/result_1.tr");
+      actualResult = t1 + t2;
+      assert(expectedResult == actualResult);
+
+
+      t1 = load_trie<char>("sum/trie_21.tr");
+      t2 = load_trie<char>("sum/trie_22.tr");
+      expectedResult = load_trie<char>("sum/result_2.tr");
+      actualResult = t1 + t2;
+      assert(expectedResult == actualResult);
+
+      expectedResult = load_trie<char>("sum/result_2.tr");
+      t1 += t2;
+      assert(expectedResult == t1);
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
+void test_leaf_iterator(){
+   try{
+      //TODO: Fai fatto bene
+      trie<char> t = load_trie<char>("trie_char2.tr");
+      trie<char>::leaf_iterator begin = t.begin();
+
+      trie<char> * child = t.get_children().get(0);
+
+      trie<char>::leaf_iterator end = child->end();
+
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
 int main() {
    test_parsing_validation();
    test_getters_setters();
    test_bag_iterator();
    test_const_bag_iterator();
+   test_leaf_iterator();
+   test_trie_sum();
    return 0;
 }

@@ -74,13 +74,13 @@ struct bag<trie<T>> {
       }
 
       for (int i = 0; i < nodes.size(); i++) {
-         if (*(*node).get_label() > *(*nodes[i]).get_label()) {
+         if (*node->get_label() > *nodes[i]->get_label()) {
             if (i == nodes.size() - 1) {
                nodes.push_back(node);
                return;
             }
 
-            if ((*node).get_label() < (*nodes[i + 1]).get_label()) {
+            if (*node->get_label() < *nodes[i + 1]->get_label()) {
                nodes.insert(nodes.begin() + i + 1, node);
                return;
             }
@@ -123,24 +123,39 @@ struct bag<trie<T>> {
       using pointer = trie<T>*;
       using reference = trie<T>&;
 
-      child_iterator(bag<trie<T>>* ptr) : m_ptr(ptr) {}
-      reference operator*() const { return *m_ptr->get(index); }
-      pointer operator->() const { return m_ptr->get(index); }
+      child_iterator(bag<trie<T>>* ptr) {
+         index = 0;
+         m_ptr = ptr;
+         if(!ptr){
+            node = nullptr;
+            return;
+         }
+         node = ptr->get(0);
+         
+      }
+      reference operator*() const { return *node; }
+      pointer operator->() const { return node; }
       child_iterator& operator++() {
          index++;
+         if(index < m_ptr->size()){
+            node = m_ptr->get(index);
+         }else{
+            node = nullptr;
+         }
          return *this;
       }
       child_iterator operator++(int) {
          child_iterator temp = *this;
-         index++;
+         ++(*this);
          return temp;
       }
-      bool operator==(child_iterator const&) const { return m_ptr == m_ptr; }
-      bool operator!=(child_iterator const&) const { return m_ptr != m_ptr; }
+      bool operator==(child_iterator const& other) const { return this->node == other.node; }
+      bool operator!=(child_iterator const& other) const { return this->node != other.node; }
 
      private:
       bag<trie<T>>* m_ptr;
-      int index = 0;
+      trie<T> * node;
+      int index;
    };
    struct const_child_iterator {
       using iterator_category = std::forward_iterator_tag;
@@ -148,28 +163,39 @@ struct bag<trie<T>> {
       using pointer = trie<T> const*;
       using reference = trie<T> const&;
 
-      const_child_iterator(bag<trie<T>> const* ptr) : m_ptr(ptr) {}
-      reference operator*() const { return *m_ptr->get(index); }
-      pointer operator->() const { return m_ptr->get(index); }
+      const_child_iterator(const bag<trie<T>>* ptr) {
+         index = 0;
+         m_ptr = ptr;
+         if(!ptr){
+            node = nullptr;
+            return;
+         }
+         node = ptr->get(0);
+         
+      }
+      reference operator*() const { return *node; }
+      pointer operator->() const { return node; }
       const_child_iterator& operator++() {
          index++;
+         if(index < m_ptr->size()){
+            node = m_ptr->get(index);
+         }else{
+            node = nullptr;
+         }
          return *this;
       }
       const_child_iterator operator++(int) {
          const_child_iterator temp = *this;
-         index++;
+         ++(*this);
          return temp;
       }
-      bool operator==(const_child_iterator const&) const {
-         return m_ptr == m_ptr;
-      }
-      bool operator!=(const_child_iterator const&) const {
-         return m_ptr != m_ptr;
-      }
+      bool operator==(const_child_iterator const& other) const { return this->node == other.node; }
+      bool operator!=(const_child_iterator const& other) const { return this->node != other.node; }
 
      private:
-      bag<trie<T>> const* m_ptr;
-      int index = 0;
+      const bag<trie<T>>* m_ptr;
+      const trie<T> * node;
+      int index;
    };
 
    /* methods to return iterators */

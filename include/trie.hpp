@@ -145,8 +145,8 @@ struct trie {
     const_node_iterator root() const;
 
 //     /* facultative: union */
-//     trie<T> operator+(trie<T> const&) const;
-//     trie<T>& operator+=(trie<T> const&);
+    trie<T> operator+(trie<T> const&) const;
+    trie<T>& operator+=(trie<T> const&);
 
 //     /* facultative: path compression */
 //     void path_compress();
