@@ -119,6 +119,7 @@ trie<T>::trie(double w) {
    this->m_w = w;
 }
 
+/* Copy Constructor */
 template <typename T>
 trie<T>::trie(trie<T> const& other) {
    if (other.get_label() == nullptr) {
@@ -127,11 +128,9 @@ trie<T>::trie(trie<T> const& other) {
       this->m_l = new T(*other.get_label());
    }
 
-   this->m_w = other.get_weight();
+   this->m_p = other.m_p;
 
-   // Parent is not copied because it could have another one. We need to set it
-   // manually.
-   this->m_p = nullptr;
+   this->m_w = other.get_weight();
 
    // This copy-construct also the childrens
    this->m_c = other.get_children();
@@ -162,18 +161,27 @@ trie<T>::~trie() {
    this->m_w = 0.0;
 }
 
+/* Copy Assignment Operator */
 template <typename T>
 trie<T>& trie<T>::operator=(trie<T> const& other) {
-   this->m_w = other.get_weight();
+   if (*this == &other) {
+      return *this;
+   }
 
+   this->m_w = other.get_weight();
    this->m_c = other.get_children();
    this->m_c.setParent(this);
 
    return *this;
 }
 
+/* Move Assignment Operator */
 template <typename T>
 trie<T>& trie<T>::operator=(trie<T>&& other) {
+   if (*this == &other) {
+      return *this;
+   }
+
    this->m_w = other.get_weight();
 
    this->m_c = std::move(other.m_c);

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <cassert>
+
 #include "bag.hpp"  // file with the implementation of your container bag<Val>
+
 #include <vector>
 
 struct parser_exception {

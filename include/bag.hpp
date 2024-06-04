@@ -9,15 +9,6 @@
 
 using namespace std;
 
-struct trie_exception {
-    trie_exception(string const& str) : m_str(str) {}
-
-    string what() const { return m_str; }
-
-private:
-    std::string m_str;
-};
-
 template <typename T>
 struct trie;
 
@@ -26,135 +17,169 @@ struct bag;
 
 template <typename T>
 struct bag<trie<T>> {
+   // Contructors and deconstructor
 
-    //Contructors and deconstructor
-    
-    bag() {
-        nodes = vector<trie<T>*>();
-    }
+   bag() { nodes = vector<trie<T>*>(); }
 
-    bag(const bag& other) {
-        for(int i = 0; i < other.size(); i++){
+   bag(const bag& other) { *this = other; }
 
-            trie<T> * newNode = new trie<T>(other.get(i));
+   bag(const bag&& other) { *this = std::move(other); }
 
-            nodes.push_back(newNode);
-        }
-    }
+   ~bag() {
+      for (trie<T>* node : nodes) {
+         delete node;
+      }
+      nodes.clear();
+   }
 
-    bag(const bag&& other) {
-        for(int i = 0; i < other.size(); i++){
+   bag& operator=(const bag& other) {
+      if (this == &other) return *this;
 
-            nodes.push_back(other.get(i));
-        }
-        other.nodes.clear();
-    }
+      for (auto node : nodes) {
+         delete node;
+      }
+      nodes.clear();
 
-    ~bag() {
-        for(trie<T>* node : nodes){
-            delete node;
-        }
-        nodes.clear();
-    }
+      for (int i = 0; i < other.size(); i++) {
+         const trie<T>* oldNode = other.get(i);
+         trie<T>* newNode = new trie<T>(*oldNode);
 
-    bag& operator=(const bag& other) {
+         nodes.push_back(newNode);
+      }
 
-        for(auto node : nodes){
-            delete node;
-        }
-        nodes.clear();
+      return *this;
+   }
 
-        for(int i = 0; i < other.size(); i++){
+   bag& operator=(bag&& other) {
+      if (this == &other) return *this;
 
-            const trie<T> * oldNode = other.get(i);
-            trie<T> * newNode = new trie<T>(*oldNode);
+      for (auto node : nodes) {
+         delete node;
+      }
+      nodes.clear();
 
-            nodes.push_back(newNode);
-        }
+      for (int i = 0; i < other.size(); i++) {
+         nodes.push_back(other.get(i));
+      }
+      other.nodes.clear();
 
-        return *this;
-    }
+      return *this;
+   }
 
-    bag& operator=(bag&& other) {
+   // Methods
+   void add(trie<T>* node) {
+      if (nodes.size() == 0) {
+         nodes.push_back(node);
+         return;
+      }
 
-        for(auto node : nodes){
-            delete node;
-        }
-        nodes.clear();
+      for (int i = 0; i < nodes.size(); i++) {
+         if (*(*node).get_label() > *(*nodes[i]).get_label()) {
+            if (i == nodes.size() - 1) {
+               nodes.push_back(node);
+               return;
+            }
 
-        for(int i = 0; i < other.size(); i++){
-
-            nodes.push_back(other.get(i));
-        }
-        other.nodes.clear();
-
-        return *this;
-    }
-
-    //Methods
-    void add(trie<T> * node) {
-
-
-        if(nodes.size() == 0){
-            nodes.push_back(node);
+            if ((*node).get_label() < (*nodes[i + 1]).get_label()) {
+               nodes.insert(nodes.begin() + i + 1, node);
+               return;
+            }
+         } else {
+            nodes.insert(nodes.begin() + i, node);
             return;
-        }
+         }
+      }
+   }
 
-        
+   trie<T>* getWithLabel(const T label) const {
+      for (trie<T>* node : nodes) {
+         if (*node->get_label() == label) {
+            return node;
+         }
+      }
 
-        for(int i = 0; i < nodes.size(); i++){
+      return nullptr;
+   }
 
-            if(*(*node).get_label() > *(*nodes[i]).get_label() ){
-                if(i == nodes.size() - 1){
-                    nodes.push_back(node);
-                    return;
-                }
+   trie<T>* get(int i) const {
+      if (i < 0 || i >= nodes.size()) {
+         return nullptr;
+      }
 
-                if((*node).get_label() < (*nodes[i+1]).get_label()){
-                    nodes.insert(nodes.begin() + i + 1, node);
-                    return;
-                }
-            } else {
-                nodes.insert(nodes.begin() + i, node);
-                return;
-            }
-        }
-    }
+      return nodes[i];
+   }
 
-    trie<T> * getWithLabel(const T label) const {
+   void setParent(trie<T>* parent) {
+      for (auto node : nodes) {
+         node->set_parent(parent);
+      }
+   }
 
-        for(trie<T> * node : nodes){
-            if(*node->get_label() == label){
-                return node;
-            }
-        }
+   int size() const { return nodes.size(); }
 
-        return nullptr;
-    }
+   struct child_iterator {
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = trie<T>;
+      using pointer = trie<T>*;
+      using reference = trie<T>&;
 
-    trie<T> * get(int i) const {
+      child_iterator(bag<trie<T>>* ptr) : m_ptr(ptr) {}
+      reference operator*() const { return *m_ptr->get(index); }
+      pointer operator->() const { return m_ptr->get(index); }
+      child_iterator& operator++() {
+         index++;
+         return *this;
+      }
+      child_iterator operator++(int) {
+         child_iterator temp = *this;
+         index++;
+         return temp;
+      }
+      bool operator==(child_iterator const&) const { return m_ptr == m_ptr; }
+      bool operator!=(child_iterator const&) const { return m_ptr != m_ptr; }
 
-        if(i < 0 || i >= nodes.size()){
-            return nullptr;
-        }
+     private:
+      bag<trie<T>>* m_ptr;
+      int index = 0;
+   };
+   struct const_child_iterator {
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = const trie<T>;
+      using pointer = trie<T> const*;
+      using reference = trie<T> const&;
 
-        return nodes[i];
-    }
+      const_child_iterator(bag<trie<T>> const* ptr) : m_ptr(ptr) {}
+      reference operator*() const { return *m_ptr->get(index); }
+      pointer operator->() const { return m_ptr->get(index); }
+      const_child_iterator& operator++() {
+         index++;
+         return *this;
+      }
+      const_child_iterator operator++(int) {
+         const_child_iterator temp = *this;
+         index++;
+         return temp;
+      }
+      bool operator==(const_child_iterator const&) const {
+         return m_ptr == m_ptr;
+      }
+      bool operator!=(const_child_iterator const&) const {
+         return m_ptr != m_ptr;
+      }
 
-    void setParent(trie<T> * parent) {
-        for(auto node : nodes){
-            node->set_parent(parent);
-        }
-    }
+     private:
+      bag<trie<T>> const* m_ptr;
+      int index = 0;
+   };
 
+   /* methods to return iterators */
+   child_iterator begin() { return child_iterator(this); }
+   child_iterator end() { return child_iterator(nullptr); }
 
-    int size() const {
-        return nodes.size();
-    }
+   const_child_iterator begin() const { return const_child_iterator(this); }
+   const_child_iterator end() const { return const_child_iterator(nullptr); }
 
-private:
-
-    //Data
-    vector<trie<T>*> nodes;
-
+  private:
+   // Data
+   vector<trie<T>*> nodes;
 };
