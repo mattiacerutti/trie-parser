@@ -18,14 +18,17 @@ double trie<T>::get_weight() const {
 template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
-   if (this->m_p) {
-      this->m_l = l;
-      return;
+
+   if(this->m_p == nullptr){
+      delete l;
+      throw parser_exception("Root node should not have a label. If you're trying to set a label for a child node, please call set_parent first");
    }
 
-   throw parser_exception(
-       "Root node should not have a label. If you're trying to set a label "
-       "for a child node, please call set_parent first");
+   if(this->m_l != nullptr){
+      delete this->m_l;
+   }
+
+   this->m_l = l;
 }
 
 template <typename T>
@@ -168,6 +171,10 @@ trie<T>& trie<T>::operator=(trie<T> const& other) {
       return *this;
    }
 
+   // Clear the previous trie
+   delete this->m_l;
+   this->m_l = nullptr;
+
    this->m_w = other.get_weight();
    this->m_c = other.get_children();
    this->m_c.setParent(this);
@@ -182,9 +189,13 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
       return *this;
    }
 
+   delete this->m_l;
+   this->m_l = nullptr;
+
    this->m_w = other.get_weight();
 
    this->m_c = std::move(other.m_c);
+   this->m_c.setParent(this);
 
    return *this;
 }
@@ -435,7 +446,8 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
 
       try {
          if constexpr (is_same_v<trieType, string>) {
-            currentTrie.set_label(new trieType(firstChunk));
+            string * newStr = new string(firstChunk);
+            currentTrie.set_label(newStr);
          } else if constexpr (is_same_v<trieType, char>) {
             if (firstChunk.size() != 1) {
                throw parser_exception(
@@ -1101,6 +1113,29 @@ trie<T>& trie<T>::operator+=(trie<T> const& other){
    *this = *this + other;
 
    return *this;
+}
+
+template <typename T>
+void compressWithRecursion(trie<T> * tr){
+   if(tr->get_children().size() == 0){
+      return;
+   }
+
+   for(typename bag<trie<T>>::child_iterator it = tr->get_children().begin(); it != tr->get_children().end(); ++it){
+      compressWithRecursion(&(*it));
+   }
+
+   if(tr->get_children().size() == 1){
+      // We need to compress this node
+      T compressedLabel = *tr->get_label() + *tr->get_children().get(0)->get_label();
+      *tr = std::move(*tr->get_children().get(0));
+      tr->set_label(new T(compressedLabel));
+   }
+}
+
+template <typename T>
+void trie<T>::path_compress(){
+   compressWithRecursion(this);
 }
 
 

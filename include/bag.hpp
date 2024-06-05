@@ -53,15 +53,20 @@ struct bag<trie<T>> {
    bag& operator=(bag&& other) {
       if (this == &other) return *this;
 
-      for (auto node : nodes) {
-         delete node;
-      }
-      nodes.clear();
+      int initialSize = nodes.size();
 
+      // We push all the elements of the other bag into this bag
       for (int i = 0; i < other.size(); i++) {
          nodes.push_back(other.get(i));
       }
+      // We clear the previous bag (need this because otherwise destructor will delete the nodes we just inserted)
       other.nodes.clear();
+
+      // We still have (if present) the nodes of the previous bag in this. We delete them and remove them
+      for (int i = 0; i < initialSize; i++) {
+         delete this->get(0);
+         this->nodes.erase(this->nodes.begin()); //Deletes the first element (due to push_back, old nodes are at the beginning of the vector)
+      }
 
       return *this;
    }
@@ -116,6 +121,10 @@ struct bag<trie<T>> {
    }
 
    int size() const { return nodes.size(); }
+
+   void clear() {
+      nodes.clear();
+   }
 
    struct child_iterator {
       using iterator_category = std::forward_iterator_tag;

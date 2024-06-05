@@ -55,7 +55,7 @@ void test_parsing_validation() {
    parsing_should_complete("trie_char1.tr", char());
    parsing_should_complete("trie_char2.tr", char());
    parsing_should_complete("trie_char3.tr", char());
-   parsing_should_complete("trie_string.tr", string());
+   parsing_should_complete("trie_string1.tr", string());
 }
 
 void test_set_label() {
@@ -81,6 +81,7 @@ void test_set_label() {
    } catch (const parser_exception& e) {
       assert(true);
    }
+
 }
 
 void test_set_weight() {
@@ -146,6 +147,7 @@ void test_bag_iterator() {
       it = t.get_children().begin();
       bag<trie<char>>::child_iterator second_it = it->get_children().begin();
       assert(second_it == it->get_children().end());
+
 
       it++;
       second_it = it->get_children().begin();
@@ -263,6 +265,19 @@ void test_leaf_iterator(){
    }
 }
 
+void test_path_compression(){
+   try{
+      trie<string> t = load_trie<string>("compression/trie_string1.tr");
+      trie<string> expectedResult = load_trie<string>("compression/result_1.tr");
+      t.path_compress();
+
+      assert(expectedResult == t);
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
 int main() {
    test_parsing_validation();
    test_getters_setters();
@@ -270,5 +285,6 @@ int main() {
    test_const_bag_iterator();
    test_leaf_iterator();
    test_trie_sum();
+   test_path_compression();
    return 0;
 }
