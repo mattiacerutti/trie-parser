@@ -595,12 +595,13 @@ istream& operator>>(std::istream& stream, trie<T>& trie) {
 
    // If file is empty
    if (stream.peek() == EOF) {
-      throw parser_exception("File is empty");
+      trie.set_label(nullptr);
+      trie.set_weight(0.0);
+      trie.set_parent(nullptr);
       return stream;
    }
 
    S(stream, trie);
-   cout << "Parsing successful" << endl;
 
    return stream;
 }
@@ -1138,6 +1139,37 @@ void trie<T>::path_compress(){
    compressWithRecursion(this);
 }
 
+template <typename T>
+void traverseRecursive(ostream& os, const trie<T>& tr){
+
+   if(tr.get_label() != nullptr){
+      os << *tr.get_label() << " ";
+   }
+
+   if(tr.get_weight() != 0.0){
+      os << tr.get_weight() << " ";
+   }
+
+
+   os << "children = {";
+
+   for(auto it = tr.get_children().begin(); it != tr.get_children().end(); ++it){
+      if(it != tr.get_children().begin()){
+         os << ", ";
+      }
+      traverseRecursive(os, *it);
+   }
+
+   os << "}";
+
+}
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, trie<T> const& tr){
+   traverseRecursive(os, tr);
+
+   return os;
+}
 
 // int main() {
 //     try{

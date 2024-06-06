@@ -278,6 +278,17 @@ void test_path_compression(){
    }
 }
 
+void test_ostream(){
+   try{
+      trie<char> t = load_trie<char>("trie_char1.tr");
+      cout << t;
+   }
+   catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
 int main() {
    test_parsing_validation();
    test_getters_setters();
@@ -286,5 +297,6 @@ int main() {
    test_leaf_iterator();
    test_trie_sum();
    test_path_compression();
+   test_ostream();
    return 0;
 }
