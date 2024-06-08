@@ -6,6 +6,7 @@
 #include "../src/trie.cpp"
 
 using namespace std;
+namespace fs = std::filesystem;
 
 #define WORKSPACE_PATH "/Users/clucch/Uni/Projects/trie-parser"
 
@@ -40,22 +41,57 @@ void parsing_should_complete(string filePath, T type) {
    }
 }
 
+int count_error_files(const fs::path& directory, string type) {
+    int count = 0;
+
+    for (const auto& entry : fs::directory_iterator(directory)) {
+        if (entry.is_regular_file() && entry.path().filename().string().find("error") != std::string::npos && entry.path().filename().string().find(type) != std::string::npos) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
+int count_non_error_files(const fs::path& directory, string type) {
+    int count = 0;
+
+    for (const auto& entry : fs::directory_iterator(directory)) {
+        if (entry.is_regular_file() && entry.path().filename().string().find("error") == std::string::npos && entry.path().filename().string().find(type) != std::string::npos) {
+            ++count;
+        }
+    }
+
+    return count;
+}
+
 void test_parsing_validation() {
-   parsing_should_throw_exception("trie_char_error1.tr", char());
-   parsing_should_throw_exception("trie_char_error2.tr", char());
-   parsing_should_throw_exception("trie_char_error3.tr", char());
-   parsing_should_throw_exception("trie_char_error4.tr", char());
-   parsing_should_throw_exception("trie_char_error5.tr", char());
 
-   parsing_should_throw_exception("trie_string_error1.tr", string());
-   parsing_should_throw_exception("trie_string_error2.tr", string());
-   parsing_should_throw_exception("trie_string_error3.tr", string());
-   parsing_should_throw_exception("trie_string_error4.tr", string());
+   int char_error_files = count_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
+   int string_error_files = count_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
 
-   parsing_should_complete("trie_char1.tr", char());
-   parsing_should_complete("trie_char2.tr", char());
-   parsing_should_complete("trie_char3.tr", char());
-   parsing_should_complete("trie_string1.tr", string());
+   int char_non_error_files = count_non_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
+   int string_non_error_files = count_non_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
+
+   // Should throw exceptions -- char
+   for(int i = 7; i <= char_error_files; i++) {
+      parsing_should_throw_exception("trie_char_error" + to_string(i) + ".tr", char());
+   }
+   // Should throw exceptions -- string
+   for(int i = 1; i <= string_error_files; i++) {
+      parsing_should_throw_exception("trie_string_error" + to_string(i) + ".tr", string());
+   }
+
+   // Should complete -- char
+   for(int i = 1; i <= char_non_error_files; i++) {
+      parsing_should_complete("trie_char" + to_string(i) + ".tr", char());
+   }
+
+   // Should complete -- string
+   for(int i = 1; i <= string_non_error_files; i++) {
+      parsing_should_complete("trie_string" + to_string(i) + ".tr", string());
+   }
+
 }
 
 void test_set_label() {
@@ -167,7 +203,8 @@ void test_bag_iterator() {
       second_it++;
       assert(*second_it->get_label() == 'c');
 
-      second_it->set_label(new char('d'));
+      char lb = 'd';
+      second_it->set_label(&lb);
       assert(*second_it->get_label() == 'd');
 
       second_it++;
@@ -261,13 +298,57 @@ void test_trie_sum(){
 
 void test_leaf_iterator(){
    try{
-      //TODO: Fai fatto bene
+      
       trie<char> t = load_trie<char>("trie_char2.tr");
-      trie<char>::leaf_iterator begin = t.begin();
+      trie<char>::leaf_iterator rootBegin = t.begin();
 
       trie<char> * child = t.get_children().get(0);
+      trie<char>::leaf_iterator childBegin = child->begin();
 
-      trie<char>::leaf_iterator end = child->end();
+      assert(rootBegin.get_leaf() == childBegin.get_leaf());
+
+      trie<char>::leaf_iterator rootEnd = t.end();
+      trie<char>::leaf_iterator childEnd = child->end();
+
+      assert(childEnd.get_leaf() == *t.get_children().get(1));
+
+      assert((rootBegin++).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(0));
+      assert((rootBegin).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(1));
+      assert((++rootBegin).get_leaf() == childEnd.get_leaf());
+      rootBegin++;
+      assert(rootBegin == rootEnd);
+
+      for(auto it = t.begin(); it != t.end(); it++){}
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
+void test_const_leaf_iterator(){
+   try{
+
+      const trie<char> t = load_trie<char>("trie_char2.tr");
+      trie<char>::const_leaf_iterator rootBegin = t.begin();
+
+      const trie<char> * child = t.get_children().get(0);
+      trie<char>::const_leaf_iterator childBegin = child->begin();
+
+      assert(rootBegin.get_leaf() == childBegin.get_leaf());
+
+      trie<char>::const_leaf_iterator rootEnd = t.end();
+      trie<char>::const_leaf_iterator childEnd = child->end();
+
+      assert(childEnd.get_leaf() == *t.get_children().get(1));
+
+      assert((rootBegin++).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(0));
+      assert((rootBegin).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(1));
+      assert((++rootBegin).get_leaf() == childEnd.get_leaf());
+      rootBegin++;
+      assert(rootBegin == rootEnd);
+
+      for(auto it = t.begin(); it != t.end(); it++){}
 
 
    } catch (const parser_exception& e) {
@@ -301,13 +382,19 @@ void test_ostream(){
 }
 
 int main() {
-   // test_parsing_validation();
+   test_parsing_validation();
    test_getters_setters();
-   // test_bag_iterator();
-   // test_const_bag_iterator();
-   // test_leaf_iterator();
-   // test_trie_sum();
-   // test_path_compression();
-   // test_ostream();
+
+   /* Bag Iterator */
+   test_bag_iterator();
+   test_const_bag_iterator();
+
+   /* Leaf Iterator */
+   test_leaf_iterator();
+   test_const_leaf_iterator();
+
+   test_trie_sum();
+   test_path_compression();
+   test_ostream();
    return 0;
 }

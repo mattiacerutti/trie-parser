@@ -20,7 +20,6 @@ template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
 
-
    // If is root node, it should not have a label
    if (this->m_p == nullptr) {
       if (l != nullptr) {
@@ -33,7 +32,7 @@ void trie<T>::set_label(T* l) {
       return;
    }
 
-   //Create new label from the old one
+   // Create new label from the old one
    T* newLabel = new T(*l);
 
    if (this->m_l != nullptr) {
@@ -324,7 +323,7 @@ void cleanString(string& str) {
 }
 
 string getNextChunk(istream& is) {
-   if (is.eof()) {
+   if (is.eof() || is.peek() == EOF) {
       throw parser_exception("Unexpected end of file");
    }
 
@@ -343,14 +342,17 @@ string getNextChunk(istream& is) {
    return chunk;
 }
 
-char getNextChar(istream& is) {
-   char nextChar;
-   is >> nextChar;
+char getNextChar(istream& is, bool isCharMandatory = true) {
 
-   while (nextChar == ' ' || nextChar == '\n' || nextChar == '\t') {
-      is >> nextChar;
+   char nextChar;
+
+   if (is.peek() == EOF && isCharMandatory) {
+      throw parser_exception("Unexpected end of file");
    }
 
+   is >> nextChar;
+
+  
    return nextChar;
 }
 
@@ -460,9 +462,9 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
       using trieType = decay_t<T>;
 
       try {
+         trieType newLabel;
          if constexpr (is_same_v<trieType, string>) {
-            string* newStr = new string(firstChunk);
-            currentTrie.set_label(newStr);
+            newLabel = firstChunk;
          } else if constexpr (is_same_v<trieType, char>) {
             if (firstChunk.size() != 1) {
                throw parser_exception(
@@ -470,7 +472,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
                    "character");
             }
 
-            currentTrie.set_label(new trieType(firstChunk[0]));
+            newLabel = firstChunk[0];
          } else if constexpr (is_integral_v<trieType>) {
             if (firstChunk.find('.') != string::npos) {
                throw parser_exception(
@@ -478,18 +480,18 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
                    "floating point number");
             }
 
-            trieType value = stoi(firstChunk);
+            newLabel = stoi(firstChunk);
 
-            currentTrie.set_label(new trieType(value));
          } else if constexpr (is_floating_point_v<trieType>) {
-            trieType value = stod(firstChunk);
+            newLabel = stod(firstChunk);
 
-            currentTrie.set_label(new trieType(value));
          }
 
          else {
             throw parser_exception("Invalid input: label type not supported");
          }
+
+         currentTrie.set_label(&newLabel);
       } catch (invalid_argument e) {
          throw parser_exception("Error while parsing label");
       }
@@ -525,7 +527,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
    /* Here we correctly inserted all children */
 
    // Check if there is ","
-   char thirdChar = getNextChar(is);
+   char thirdChar = getNextChar(is, false);
    if (thirdChar == ',') {
       // We have a sibling
 
@@ -590,7 +592,7 @@ void S(istream& is, trie<T>& currentTrie) {
    /* Here we correctly inserted all children */
 
    // Check if there is ","
-   char thirdChar = getNextChar(is);
+   char thirdChar = getNextChar(is, false);
    if (thirdChar == ',') {
       // We have a sibling
 
@@ -606,7 +608,6 @@ void S(istream& is, trie<T>& currentTrie) {
 
 template <typename T>
 istream& operator>>(std::istream& stream, trie<T>& tr) {
-   
    trie<T> newTrie;
 
    // If file is not empty
@@ -736,9 +737,12 @@ trie<T>::leaf_iterator::leaf_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 template <typename T>
 typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*()
     const {
-   // TODO: Don't know if i should do this
+   if (m_ptr == nullptr) {
+      throw parser_exception("Can't deference a null iterator");
+   }
+
    if (m_ptr->m_l == nullptr) {
-      throw parser_exception("Invalid input: node has no label");
+      throw parser_exception("LeafIterator operator*: node has no label");
    }
    return *m_ptr->m_l;
 }
@@ -747,7 +751,7 @@ template <typename T>
 typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->()
     const {
    if (m_ptr == nullptr) {
-      throw parser_exception("Invalid input: node has no label");
+      throw parser_exception("Can't deference a null iterator");
    }
    return m_ptr->m_l;
 }
@@ -822,6 +826,9 @@ trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
 
 template <typename T>
 trie<T>& trie<T>::leaf_iterator::get_leaf() const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Can't deference a null iterator");
+   }
    return *m_ptr;
 }
 
@@ -832,10 +839,14 @@ trie<T>::const_leaf_iterator::const_leaf_iterator(const trie<T>* ptr)
 template <typename T>
 typename trie<T>::const_leaf_iterator::reference
 trie<T>::const_leaf_iterator::operator*() const {
-   // TODO: Don't know if i should do this
-   if (m_ptr->m_l == nullptr) {
-      throw parser_exception("Invalid input: node has no label");
+   if (m_ptr == nullptr) {
+      throw parser_exception("Can't deference a null iterator");
    }
+
+   if (m_ptr->m_l == nullptr) {
+      throw parser_exception("LeafIterator operator*: node has no label");
+   }
+
    return *m_ptr->m_l;
 }
 
@@ -843,7 +854,7 @@ template <typename T>
 typename trie<T>::const_leaf_iterator::pointer
 trie<T>::const_leaf_iterator::operator->() const {
    if (m_ptr == nullptr) {
-      throw parser_exception("Invalid input: node has no label");
+      throw parser_exception("Can't deference a null iterator");
    }
    return m_ptr->m_l;
 }
@@ -923,6 +934,9 @@ trie<T>::const_leaf_iterator::operator trie<T>::const_node_iterator() const {
 
 template <typename T>
 trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
+   if (m_ptr == nullptr) {
+      throw parser_exception("Can't deference a null iterator");
+   }
    return *m_ptr;
 }
 
@@ -976,7 +990,7 @@ typename trie<T>::leaf_iterator trie<T>::end() {
 
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::begin() const {
-   trie<T>* tr = this;
+   const trie<T>* tr = this;
 
    while (tr->get_children().size() > 0) {
       tr = tr->get_children().get(0);
@@ -989,7 +1003,7 @@ template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::end() const {
    if (this->get_parent() == nullptr) return const_leaf_iterator(nullptr);
 
-   trie<T>* tr = this;
+   const trie<T>* tr = this;
    if (tr->get_children().size() == 0) {
       return const_leaf_iterator(nullptr);
    }
@@ -1001,13 +1015,13 @@ typename trie<T>::const_leaf_iterator trie<T>::end() const {
    // Now tr is the last leaf that is still a child to the trie. We need to find
    // the one next to tr.
 
-   trie<T>* root = this;
+   const trie<T>* root = this;
    while (root->get_parent() != nullptr) {
       root = root->m_p;
    }
 
    bool foundCurrent = false;
-   trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
+   const trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
 
    return const_leaf_iterator(nextLeaf);
 }
@@ -1136,7 +1150,7 @@ void compressWithRecursion(trie<T>* tr) {
       T compressedLabel =
           *tr->get_label() + *tr->get_children().get(0)->get_label();
       *tr = std::move(*tr->get_children().get(0));
-      tr->set_label(new T(compressedLabel));
+      tr->set_label(&compressedLabel);
    }
 }
 
