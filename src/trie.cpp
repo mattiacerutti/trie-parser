@@ -1,4 +1,5 @@
 #include "../include/trie.hpp"  // It is forbidden to include other libraries!
+// #include "trie.hpp"
 
 /* Here below, your implementation of trie. */
 template <typename T>
@@ -19,12 +20,14 @@ template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
 
-   if(this->m_p == nullptr){
+   if (this->m_p == nullptr) {
       delete l;
-      throw parser_exception("Root node should not have a label. If you're trying to set a label for a child node, please call set_parent first");
+      throw parser_exception(
+          "Root node should not have a label. If you're trying to set a label "
+          "for a child node, please call set_parent first");
    }
 
-   if(this->m_l != nullptr){
+   if (this->m_l != nullptr) {
       delete this->m_l;
    }
 
@@ -293,6 +296,8 @@ void cleanString(string& str) {
    int lastChar = str.find_last_not_of(" \t\n");
 
    if (firstChar == string::npos || lastChar == string::npos) {
+      // If the string has only spaces, tabs or newlines, it means that is
+      // invalid
       return;
    }
 
@@ -311,7 +316,6 @@ void cleanString(string& str) {
 }
 
 string getNextChunk(istream& is) {
-
    if (is.eof()) {
       throw parser_exception("Unexpected end of file");
    }
@@ -321,8 +325,11 @@ string getNextChunk(istream& is) {
 
    cleanString(chunk);
 
-   while (chunk == "" || chunk == "\n" || chunk == "\t") {
+   while (chunk == "" || chunk.find(' ') != string::npos ||
+          chunk.find('\t') != string::npos ||
+          chunk.find('\n') != string::npos) {
       getline(is, chunk, ' ');
+      cleanString(chunk);
    }
 
    return chunk;
@@ -446,7 +453,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
 
       try {
          if constexpr (is_same_v<trieType, string>) {
-            string * newStr = new string(firstChunk);
+            string* newStr = new string(firstChunk);
             currentTrie.set_label(newStr);
          } else if constexpr (is_same_v<trieType, char>) {
             if (firstChunk.size() != 1) {
@@ -878,7 +885,6 @@ const trie<T>* findNextLeaf(const trie<T>* current, const trie<T>* root,
 template <typename T>
 typename trie<T>::const_leaf_iterator&
 trie<T>::const_leaf_iterator::operator++() {
-
    const trie<T>* root = m_ptr;
    while (root->get_parent() != nullptr) {
       root = root->m_p;
@@ -924,8 +930,6 @@ typename trie<T>::node_iterator trie<T>::root() {
    return node_iterator(tr);
 }
 
-
-
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::begin() {
    trie<T>* tr = this;
@@ -937,14 +941,12 @@ typename trie<T>::leaf_iterator trie<T>::begin() {
    return leaf_iterator(tr);
 }
 
-
 template <typename T>
 typename trie<T>::leaf_iterator trie<T>::end() {
-   if(this->get_parent() == nullptr)
-      return leaf_iterator(nullptr);
-   
+   if (this->get_parent() == nullptr) return leaf_iterator(nullptr);
+
    trie<T>* tr = this;
-   if(tr->get_children().size() == 0){
+   if (tr->get_children().size() == 0) {
       return leaf_iterator(nullptr);
    }
 
@@ -952,7 +954,8 @@ typename trie<T>::leaf_iterator trie<T>::end() {
       tr = tr->get_children().get(tr->get_children().size() - 1);
    }
 
-   // Now tr is the last leaf that is still a child to the trie. We need to find the one next to tr.
+   // Now tr is the last leaf that is still a child to the trie. We need to find
+   // the one next to tr.
 
    trie<T>* root = this;
    while (root->get_parent() != nullptr) {
@@ -962,10 +965,8 @@ typename trie<T>::leaf_iterator trie<T>::end() {
    bool foundCurrent = false;
    trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
 
-
    return leaf_iterator(nextLeaf);
 }
-
 
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::begin() const {
@@ -980,11 +981,10 @@ typename trie<T>::const_leaf_iterator trie<T>::begin() const {
 
 template <typename T>
 typename trie<T>::const_leaf_iterator trie<T>::end() const {
-   if(this->get_parent() == nullptr)
-      return const_leaf_iterator(nullptr);
-   
+   if (this->get_parent() == nullptr) return const_leaf_iterator(nullptr);
+
    trie<T>* tr = this;
-   if(tr->get_children().size() == 0){
+   if (tr->get_children().size() == 0) {
       return const_leaf_iterator(nullptr);
    }
 
@@ -992,7 +992,8 @@ typename trie<T>::const_leaf_iterator trie<T>::end() const {
       tr = tr->get_children().get(tr->get_children().size() - 1);
    }
 
-   // Now tr is the last leaf that is still a child to the trie. We need to find the one next to tr.
+   // Now tr is the last leaf that is still a child to the trie. We need to find
+   // the one next to tr.
 
    trie<T>* root = this;
    while (root->get_parent() != nullptr) {
@@ -1001,7 +1002,6 @@ typename trie<T>::const_leaf_iterator trie<T>::end() const {
 
    bool foundCurrent = false;
    trie<T>* nextLeaf = findNextLeaf(tr, root, foundCurrent);
-
 
    return const_leaf_iterator(nextLeaf);
 }
@@ -1050,51 +1050,50 @@ const trie<T>& trie<T>::max() const {
 }
 
 template <typename T>
-void addWithRecurion(trie<T> * tr, const trie<T> * other) {
-
+void addWithRecurion(trie<T>* tr, const trie<T>* other) {
    if (tr->get_children().size() == 0) {
-      //We are in a leaf
-      if(other){
-
-         if(other->get_children().size() > 0){
+      // We are in a leaf
+      if (other) {
+         if (other->get_children().size() > 0) {
             double trWeight = tr->get_weight();
             // Add all other's children to tr
-            for (typename bag<trie<T>>::const_child_iterator it = other->get_children().begin(); it != other->get_children().end(); ++it) {
+            for (typename bag<trie<T>>::const_child_iterator it =
+                     other->get_children().begin();
+                 it != other->get_children().end(); ++it) {
                tr->add_child(*it);
             }
 
-            for(typename trie<T>::leaf_iterator leaf_it = tr->begin(); leaf_it != tr->end(); ++leaf_it){
-               leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() + trWeight);
+            for (typename trie<T>::leaf_iterator leaf_it = tr->begin();
+                 leaf_it != tr->end(); ++leaf_it) {
+               leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() +
+                                             trWeight);
             }
          } else {
             // Sum the weights
             tr->set_weight(tr->get_weight() + other->get_weight());
          }
-
-
-
-        
       }
    } else {
-      if(other->get_children().size() > 0){
+      if (other->get_children().size() > 0) {
          for (int i = 0; i < other->get_children().size(); i++) {
-            trie<T> * otherChild = other->get_children().get(i);
-            trie<T> * trChild = tr->get_children().getWithLabel(*otherChild->get_label());
+            trie<T>* otherChild = other->get_children().get(i);
+            trie<T>* trChild =
+                tr->get_children().getWithLabel(*otherChild->get_label());
 
-            if(!trChild){
+            if (!trChild) {
                tr->add_child(*otherChild);
             } else {
                addWithRecurion(trChild, otherChild);
             }
-            
          }
       } else {
-         for(typename trie<T>::leaf_iterator leaf_it = tr->begin(); leaf_it != tr->end(); ++leaf_it){
-            leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() + other->get_weight());
+         for (typename trie<T>::leaf_iterator leaf_it = tr->begin();
+              leaf_it != tr->end(); ++leaf_it) {
+            leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() +
+                                          other->get_weight());
          }
       }
    }
-
 }
 
 template <typename T>
@@ -1106,66 +1105,65 @@ trie<T> trie<T>::operator+(trie<T> const& other) const {
    addWithRecurion(&newTrie, &other);
 
    return newTrie;
-
 }
 
 template <typename T>
-trie<T>& trie<T>::operator+=(trie<T> const& other){
+trie<T>& trie<T>::operator+=(trie<T> const& other) {
    *this = *this + other;
 
    return *this;
 }
 
 template <typename T>
-void compressWithRecursion(trie<T> * tr){
-   if(tr->get_children().size() == 0){
+void compressWithRecursion(trie<T>* tr) {
+   if (tr->get_children().size() == 0) {
       return;
    }
 
-   for(typename bag<trie<T>>::child_iterator it = tr->get_children().begin(); it != tr->get_children().end(); ++it){
+   for (typename bag<trie<T>>::child_iterator it = tr->get_children().begin();
+        it != tr->get_children().end(); ++it) {
       compressWithRecursion(&(*it));
    }
 
-   if(tr->get_children().size() == 1){
+   if (tr->get_children().size() == 1) {
       // We need to compress this node
-      T compressedLabel = *tr->get_label() + *tr->get_children().get(0)->get_label();
+      T compressedLabel =
+          *tr->get_label() + *tr->get_children().get(0)->get_label();
       *tr = std::move(*tr->get_children().get(0));
       tr->set_label(new T(compressedLabel));
    }
 }
 
 template <typename T>
-void trie<T>::path_compress(){
+void trie<T>::path_compress() {
    compressWithRecursion(this);
 }
 
 template <typename T>
-void traverseRecursive(ostream& os, const trie<T>& tr){
-
-   if(tr.get_label() != nullptr){
+void traverseRecursive(ostream& os, const trie<T>& tr) {
+   if (tr.get_label() != nullptr) {
       os << *tr.get_label() << " ";
    }
 
-   if(tr.get_weight() != 0.0){
+   if (tr.get_weight() != 0.0) {
       os << tr.get_weight() << " ";
    }
 
-
    os << "children = {";
 
-   for(auto it = tr.get_children().begin(); it != tr.get_children().end(); ++it){
-      if(it != tr.get_children().begin()){
+   for (auto it = tr.get_children().begin(); it != tr.get_children().end();
+        ++it) {
+      if (it != tr.get_children().begin()) {
          os << ", ";
       }
       traverseRecursive(os, *it);
    }
 
    os << "}";
-
 }
 
 template <typename T>
-std::ostream& operator<<(std::ostream& os, trie<T> const& tr){
+std::ostream& operator<<(std::ostream& os, trie<T> const& tr) {
    traverseRecursive(os, tr);
 
    return os;
