@@ -181,11 +181,8 @@ trie<T>& trie<T>::operator=(trie<T> const& other) {
       return *this;
    }
 
-   // Clear the previous trie
-   delete this->m_l;
-   this->m_l = nullptr;
-
    this->m_w = other.get_weight();
+   
    this->m_c = other.get_children();
    this->m_c.setParent(this);
 
@@ -199,8 +196,6 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
       return *this;
    }
 
-   delete this->m_l;
-   this->m_l = nullptr;
 
    this->m_w = other.get_weight();
 
