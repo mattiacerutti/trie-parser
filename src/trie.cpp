@@ -182,7 +182,7 @@ trie<T>& trie<T>::operator=(trie<T> const& other) {
    }
 
    this->m_w = other.get_weight();
-   
+
    this->m_c = other.get_children();
    this->m_c.setParent(this);
 
@@ -1140,12 +1140,14 @@ void compressWithRecursion(trie<T>* tr) {
       compressWithRecursion(&(*it));
    }
 
-   if (tr->get_children().size() == 1) {
+   if (tr->get_parent() != nullptr && tr->get_children().size() == 1) {
       // We need to compress this node
       T compressedLabel =
           *tr->get_label() + *tr->get_children().get(0)->get_label();
       *tr = std::move(*tr->get_children().get(0));
       tr->set_label(&compressedLabel);
+
+      tr->get_parent()->get_children().reorderChilds();
    }
 }
 

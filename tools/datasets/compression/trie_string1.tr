@@ -3,9 +3,11 @@ children = {
    ac children = {
       bc 2.9 children = {},
       c children = {
-         dg children = {
-            x 7.0 children = {},
-            yz 5.3 children = {}
+         a children = {
+            dg children = {
+               x 7.0 children = {},
+               yz 5.3 children = {}
+            }
          }
       }
    }

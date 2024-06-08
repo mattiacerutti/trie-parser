@@ -120,6 +120,17 @@ struct bag<trie<T>> {
       }
    }
 
+   void reorderChilds(){
+      vector<trie<T>*> newArr = nodes;
+      
+      this->clear();
+
+      for(auto tr : newArr){
+         this->add(tr);
+      }
+
+   }
+
    int size() const { return nodes.size(); }
 
    void clear() {
