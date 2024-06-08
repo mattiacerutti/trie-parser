@@ -20,8 +20,9 @@ template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
 
+
+   // If is root node, it should not have a label
    if (this->m_p == nullptr) {
-      delete l;
       if (l != nullptr) {
          throw parser_exception(
              "Root node should not have a label. If you're trying to set a "
@@ -32,11 +33,14 @@ void trie<T>::set_label(T* l) {
       return;
    }
 
+   //Create new label from the old one
+   T* newLabel = new T(*l);
+
    if (this->m_l != nullptr) {
       delete this->m_l;
    }
 
-   this->m_l = l;
+   this->m_l = newLabel;
 }
 
 template <typename T>
@@ -122,7 +126,6 @@ trie<T>::trie() {
    this->m_l = nullptr;
    this->m_w = 0.0;
 }
-
 template <typename T>
 trie<T>::trie(double w) {
    this->m_p = nullptr;
