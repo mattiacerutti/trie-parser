@@ -22,9 +22,14 @@ void trie<T>::set_label(T* l) {
 
    if (this->m_p == nullptr) {
       delete l;
-      throw parser_exception(
-          "Root node should not have a label. If you're trying to set a label "
-          "for a child node, please call set_parent first");
+      if (l != nullptr) {
+         throw parser_exception(
+             "Root node should not have a label. If you're trying to set a "
+             "label "
+             "for a child node, please call set_parent first");
+      }
+      this->m_l = nullptr;
+      return;
    }
 
    if (this->m_l != nullptr) {
@@ -597,18 +602,16 @@ void S(istream& is, trie<T>& currentTrie) {
 }
 
 template <typename T>
-istream& operator>>(std::istream& stream, trie<T>& trie) {
-   // TODO: Add label type checking = T
+istream& operator>>(std::istream& stream, trie<T>& tr) {
+   
+   trie<T> newTrie;
 
-   // If file is empty
-   if (stream.peek() == EOF) {
-      trie.set_label(nullptr);
-      trie.set_weight(0.0);
-      trie.set_parent(nullptr);
-      return stream;
+   // If file is not empty
+   if (stream.peek() != EOF) {
+      S(stream, newTrie);
    }
 
-   S(stream, trie);
+   tr = std::move(newTrie);
 
    return stream;
 }
