@@ -74,7 +74,7 @@ void test_parsing_validation() {
    int string_non_error_files = count_non_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
 
    // Should throw exceptions -- char
-   for(int i = 7; i <= char_error_files; i++) {
+   for(int i = 1; i <= char_error_files; i++) {
       parsing_should_throw_exception("trie_char_error" + to_string(i) + ".tr", char());
    }
    // Should throw exceptions -- string
@@ -466,8 +466,29 @@ void test_copy_assignment(){
       cout << e.what() << endl;
       assert(false);
    }
-
 }
+
+void test_prefix_search(){
+
+   try {
+
+      trie<char> t = load_trie<char>("trie_char1.tr");
+
+      vector<char> path = {'a', 'b', 'c'};
+      assert(t[path] == *t.get_children().get(0));
+
+      path = {'z'};
+      assert(t[path] == t);
+
+      path = {'b', 'c', 'b'};
+      assert(t[path] == *t.get_children().get(1)->get_children().get(1)->get_children().get(0));
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
 
 int main() {
    /* Parser basics */
@@ -488,6 +509,9 @@ int main() {
 
    /* Assignments */
    test_copy_assignment();
+
+   /* Operator [] */
+   test_prefix_search();
 
    test_trie_sum();
    test_path_compression();

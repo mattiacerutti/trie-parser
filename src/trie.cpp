@@ -196,7 +196,6 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
       return *this;
    }
 
-
    this->m_w = other.get_weight();
 
    this->m_c = std::move(other.m_c);
@@ -292,53 +291,41 @@ trie<T> const& trie<T>::operator[](std::vector<T> const& path) const {
    return *current;
 }
 
-void cleanString(string& str) {
-   int firstChar = str.find_first_not_of(" \t\n");
+string getNextChunk(istream& is, char customDelimiter = ' ') {
 
-   int lastChar = str.find_last_not_of(" \t\n");
+   string chunk = "";
+   char buffer;
 
-   if (firstChar == string::npos || lastChar == string::npos) {
-      // If the string has only spaces, tabs or newlines, it means that is
-      // invalid
-      return;
-   }
-
-   string newStr = str.substr(firstChar, lastChar - firstChar + 1);
-
-   // If the new string still has spaces, tabs or newlines, it means that the
-   // keyword is not well formatted
-   if (newStr.find(' ') != string::npos || newStr.find('\t') != string::npos ||
-       newStr.find('\n') != string::npos) {
-      throw parser_exception(
-          "Invalid input: keywords can't have spaces, tabs or newlines in "
-          "the middle of the string");
-   }
-
-   str = newStr;
-}
-
-string getNextChunk(istream& is) {
-   if (is.eof() || is.peek() == EOF) {
-      throw parser_exception("Unexpected end of file");
-   }
-
-   string chunk;
-   getline(is, chunk, ' ');
-
-   cleanString(chunk);
-
-   while (chunk == "" || chunk.find(' ') != string::npos ||
-          chunk.find('\t') != string::npos ||
-          chunk.find('\n') != string::npos) {
-      getline(is, chunk, ' ');
-      cleanString(chunk);
-   }
+   do{
+      is >> buffer;
+      if (is.eof() || is.peek() == EOF) {
+         throw parser_exception("Unexpected end of file");
+      }
+      chunk.push_back(buffer);
+   } while(is.peek() != ' ' && is.peek() != '\t'  && is.peek() != '\n' && is.peek() != customDelimiter);
 
    return chunk;
+
+   // if (couldBeChildren && chunk != "children") {
+   //    // Get the position of the "children" string inside the chunk
+   //    size_t childrenStringStartIndex = chunk.find("children");
+   //    if (childrenStringStartIndex != string::npos) {
+   //       // Calculate the number of characters to go back
+   //       int numCharsToGoBack =
+   //           chunk.length() - (childrenStringStartIndex + string("children").length());
+
+   //       // Move the istream pointer back by the calculated number of
+   //       // characters in the input stream
+   //       is.seekg(-numCharsToGoBack, std::ios::cur);
+
+   //       // Resize the chunk string by removing the characters at the end
+   //       chunk.resize(chunk.size() - numCharsToGoBack);
+         
+   //    }
+   // }
 }
 
 char getNextChar(istream& is, bool isCharMandatory = true) {
-
    char nextChar;
 
    if (is.peek() == EOF && isCharMandatory) {
@@ -347,38 +334,32 @@ char getNextChar(istream& is, bool isCharMandatory = true) {
 
    is >> nextChar;
 
-  
    return nextChar;
 }
 
 void C(istream& is) {
-   string firstChunk = getNextChunk(is);
+   string firstChunk = getNextChunk(is, '=');
 
-   if (firstChunk == "children") {
-      // We have a label and a weight
-   } else {
+   if (firstChunk != "children") {
       throw parser_exception(
-          "Invalid input: expected children but got something else (this "
+          "Invalid input: expected children but got something else: '" + firstChunk + "'" + ". This "
           "usually happens when a node has another property other than "
-          "weight and label)");
+          "weight and label.");
    }
 }
 
 template <typename T>
 void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie) {
-   string firstChunk = getNextChunk(is);
+   string firstChunk = getNextChunk(is, '=');
 
-   if (firstChunk == "children") {
-      // We have only a label
-
-   } else {
+   if (firstChunk != "children") {
       // We have a label and a weight
 
       // Check if weight is double
       try {
          currentTrie.set_weight(stod(firstChunk));
       } catch (invalid_argument e) {
-         throw parser_exception("Invalid input: weight should be a double");
+         throw parser_exception("Invalid input: weight should be a double, instead got: '" + firstChunk + "'.");
       }
 
       shouldEspectLeaf = true;
@@ -417,7 +398,6 @@ void R(istream& is, bool shouldEspectLeaf, trie<T>& currentTrie) {
       is.unget();
 
       // Build the child
-
       auto it = currentTrie.root();
       using ValueType = typename decltype(it)::value_type;
 
@@ -440,7 +420,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
       // We are in the root
 
       throw parser_exception(
-          "Invalid input: non-root nodes should have a label");
+          "Invalid input: non-root nodes should have a label, instead got children keyword");
 
    } else {
       // We are in a child and firstChunk is a label
@@ -451,7 +431,7 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
           firstChunk.find(',') != string::npos) {
          throw parser_exception(
              "Invalid input: got unexpected character in the beginning of "
-             "the string");
+             "the string: '" + firstChunk + "ì");
       }
 
       using trieType = decay_t<T>;
@@ -497,33 +477,33 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
    /* Here we correctly set label and weight */
 
    // Check if there is "="
-   char equalChar = getNextChar(is);
-   if (equalChar != '=') {
+   char tmp = getNextChar(is);
+   if (tmp != '=') {
       throw parser_exception(
-          "Invalid input: expected = but got something else");
+          "Invalid input: expected = but got something else: '" + string(1, tmp) + "'");
    }
 
    // Check if there is "{"
-   char firstChar = getNextChar(is);
-   if (firstChar != '{') {
+   tmp = getNextChar(is);
+   if (tmp != '{') {
       throw parser_exception(
-          "Invalid input: expected { but got something else");
+          "Invalid input: expected { but got something else'" + string(1, tmp) + "'");
    }
 
    R(is, shouldEspectLeaf, currentTrie);
 
    // Check if there is "}"
-   char secondChar = getNextChar(is);
-   if (secondChar != '}') {
+   tmp = getNextChar(is);
+   if (tmp != '}') {
       throw parser_exception(
-          "Invalid input: expected } but got something else");
+          "Invalid input: expected } but got something else'" + string(1, tmp) + "'");
    }
 
    /* Here we correctly inserted all children */
 
    // Check if there is ","
-   char thirdChar = getNextChar(is, false);
-   if (thirdChar == ',') {
+   tmp = getNextChar(is, false);
+   if (tmp == ',') {
       // We have a sibling
 
       auto it = currentTrie.root();
@@ -547,41 +527,39 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
 
 template <typename T>
 void S(istream& is, trie<T>& currentTrie) {
-   string firstChunk = getNextChunk(is);
+   string firstChunk = getNextChunk(is, '=');
 
    bool shouldEspectLeaf = false;
 
-   if (firstChunk == "children") {
+   if (firstChunk != "children") {
       // We are in the root
-
-   } else {
       throw parser_exception(
-          "Invalid input: root node should start with children keyword");
+          "Invalid input: root node should start with children keyword, instead got: '" + firstChunk + "'");
    }
 
    /* Here we correctly set label and weight */
 
    // Check if there is "="
-   char equalChar = getNextChar(is);
-   if (equalChar != '=') {
+   char tmp = getNextChar(is);
+   if (tmp != '=') {
       throw parser_exception(
-          "Invalid input: expected = but got something else");
+          "Invalid input: expected = but got something else: '" + string(1, tmp) + "'");
    }
 
    // Check if there is "{"
-   char firstChar = getNextChar(is);
-   if (firstChar != '{') {
+   tmp = getNextChar(is);
+   if (tmp != '{') {
       throw parser_exception(
-          "Invalid input: expected { but got something else");
+          "Invalid input: expected { but got something else'" + string(1, tmp) + "'");
    }
 
    R(is, shouldEspectLeaf, currentTrie);
 
    // Check if there is "}"
-   char secondChar = getNextChar(is);
-   if (secondChar != '}') {
+   tmp = getNextChar(is);
+   if (tmp != '}') {
       throw parser_exception(
-          "Invalid input: expected } but got something else");
+          "Invalid input: expected } but got something else'" + string(1, tmp) + "'");
    }
 
    /* Here we correctly inserted all children */

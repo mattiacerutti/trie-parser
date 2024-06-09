@@ -2,10 +2,7 @@ children = {
    a children = {
 		b children = {
          c 1 children = {},
-         b children = {
-            c 1 children = {},
-            d 2 children = {}
-         }
+         d 2 children = {}
       }
    },
    e 3 children = {}

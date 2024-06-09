@@ -1,0 +1,24 @@
+children = {
+    a children = {
+        b children = {
+            c children = {
+                d children = {
+                    e 5 children = {}
+                }
+            }
+        }
+    },
+    f children = {
+        g children = {
+            h children = {
+                i children = {
+                    j 10 children = {}
+                }
+            }
+        }
+    },
+    k children = {
+        l 15 children = {},
+        j 18 children = {}
+    }
+}
