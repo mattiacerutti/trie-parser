@@ -377,7 +377,7 @@ void test_node_iterator(){
    }
 }
 
-void test_const_node_iterator(){
+void test_const_node_iterator(){ 
    try{
       const trie<char> t = load_trie<char>("trie_char5.tr");
       trie<char>::const_node_iterator root = t.root();
@@ -395,6 +395,24 @@ void test_const_node_iterator(){
       cout << e.what() << endl;
       assert(false);
    }
+}
+
+void test_max_function(){
+   try{
+      trie<char> t = load_trie<char>("trie_char5.tr");
+      assert(t.max() == *t.get_children().get(1));
+
+      trie<char> childNode = *t.get_children().get(0);
+      assert(childNode.max() == *childNode.get_children().get(0)->get_children().get(1));
+      
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+void test_const_max_function(){
+
 }
 
 void test_path_compression(){
@@ -507,14 +525,23 @@ int main() {
    test_node_iterator();
    test_const_node_iterator();
 
+   /* Max Function */
+   test_max_function();
+   test_const_max_function();
+
    /* Assignments */
    test_copy_assignment();
 
    /* Operator [] */
    test_prefix_search();
 
+   /* Trie Sum */
    test_trie_sum();
+
+   /* Path Compression */
    test_path_compression();
+
+   /* File Writing */
    test_ostream();
    return 0;
 }

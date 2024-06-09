@@ -749,7 +749,7 @@ trie<T>* findNextLeaf(trie<T>* current, trie<T>* root, bool& foundCurrent) {
       if (foundCurrent) {
          return root;
       }
-      if (root == current) {
+      if (*root == *current) {
          foundCurrent = true;
       }
       return nullptr;
@@ -855,7 +855,7 @@ const trie<T>* findNextLeaf(const trie<T>* current, const trie<T>* root,
       if (foundCurrent) {
          return root;
       }
-      if (root == current) {
+      if (*root == *current) {
          foundCurrent = true;
       }
       return nullptr;
