@@ -20,16 +20,18 @@ template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
 
-   // If is root node, it should not have a label
-   if (this->m_p == nullptr) {
-      if (l != nullptr) {
-         throw parser_exception(
-             "Root node should not have a label. If you're trying to set a "
-             "label "
-             "for a child node, please call set_parent first");
-      }
+   if(l == nullptr){
       this->m_l = nullptr;
       return;
+   }
+
+   // If is root node, it should not have a label
+   if (this->m_p == nullptr) {
+      throw parser_exception(
+            "Root node should not have a label. If you're trying to set a "
+            "label "
+            "for a child node, please call set_parent first");
+      
    }
 
    // Create new label from the old one
@@ -135,6 +137,7 @@ trie<T>::trie(double w) {
 /* Copy Constructor */
 template <typename T>
 trie<T>::trie(trie<T> const& other) {
+
    if (other.get_label() == nullptr) {
       this->m_l = nullptr;
    } else {
@@ -230,8 +233,8 @@ bool areChildrenEqual(bag<trie<T>> const& c1, bag<trie<T>> const& c2) {
 template <typename T>
 bool trie<T>::operator==(trie<T> const& other) const {
    // If one is root and the other is not, they are not equal
-   if (this->m_l == nullptr && other.get_label() != nullptr ||
-       this->m_l != nullptr && other.get_label() == nullptr) {
+   if ((this->m_l == nullptr && other.get_label() != nullptr) ||
+       (this->m_l != nullptr && other.get_label() == nullptr)) {
       return false;
    }
 
@@ -998,7 +1001,6 @@ typename trie<T>::const_leaf_iterator trie<T>::end() const {
 
    return const_leaf_iterator(nextLeaf);
 }
-
 template <typename T>
 typename trie<T>::const_node_iterator trie<T>::root() const {
    const trie<T>* tr = this;
@@ -1163,38 +1165,3 @@ std::ostream& operator<<(std::ostream& os, trie<T> const& tr) {
 
    return os;
 }
-
-// int main() {
-//     try{
-
-//         // //FIXME: ONLY FOR TESTING REASONS
-//         // trie<char> t;
-//         // ifstream file("../test.txt");
-//         // file>>t;
-//         // file.close();
-
-//         // trie<char> t1;
-//         // ifstream asd("../test2.txt");
-//         // asd>>t1;
-//         // asd.close();
-
-//         // const trie<char>& t3 = t1;
-
-//         // // *t.get_children().get(1)->get_children().get(0) = move(t1);
-
-//         // vector<char> s{'c', 'i', 'z'};
-
-//         // const trie<char>& t2 = t3[s];
-
-//         // // trie<char> mv = std::move(t);
-
-//         return 0;
-//     }  catch (parser_exception e){
-//         throw runtime_error(e.what());
-//         return 1;
-//     } catch (trie_exception e){
-//         throw runtime_error(e.what());
-//         return 1;
-//     }
-
-// }

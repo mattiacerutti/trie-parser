@@ -78,7 +78,7 @@ struct bag<trie<T>> {
          return;
       }
 
-      for (int i = 0; i < nodes.size(); i++) {
+      for (size_t i = 0; i < nodes.size(); i++) {
          if (*node->get_label() > *nodes[i]->get_label()) {
             if (i == nodes.size() - 1) {
                nodes.push_back(node);
@@ -107,7 +107,7 @@ struct bag<trie<T>> {
    }
 
    trie<T>* get(int i) const {
-      if (i < 0 || i >= nodes.size()) {
+      if (i < 0 || i >= (int)nodes.size()) {
          return nullptr;
       }
 

@@ -109,6 +109,8 @@ void test_set_label() {
       char a = 'a';
       t2.set_label(&a);
 
+      t2.set_label(nullptr);
+
    } catch (const parser_exception& e) {
       assert(false);
    }
