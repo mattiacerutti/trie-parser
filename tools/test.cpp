@@ -292,6 +292,12 @@ void test_trie_sum(){
       t1 += t2;
       assert(expectedResult == t1);
 
+      t1 = load_trie<char>("sum/trie_31.tr");
+      t2 = load_trie<char>("sum/trie_32.tr");
+      expectedResult = load_trie<char>("sum/result_3.tr");
+      t1 += t2;
+      assert(expectedResult == t1);
+
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
