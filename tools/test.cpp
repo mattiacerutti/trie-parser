@@ -506,8 +506,20 @@ void test_prefix_search(){
       path = {'z'};
       assert(t[path] == t);
 
-      path = {'b', 'c', 'b'};
+      path = {'z', 'b', 'e', 'c', 'b'};
       assert(t[path] == *t.get_children().get(1)->get_children().get(1)->get_children().get(0));
+
+
+      const trie<char> t1 = load_trie<char>("trie_char1.tr");
+
+      path = {'a', 'b', 'c'};
+      assert(t1[path] == *t.get_children().get(0));
+
+      path = {'z'};
+      assert(t1[path] == t);
+
+      path = {'z', 'b', 'e', 'c', 'b'};
+      assert(t1[path] == *t.get_children().get(1)->get_children().get(1)->get_children().get(0));
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
@@ -551,5 +563,6 @@ int main() {
 
    /* File Writing */
    test_ostream();
+
    return 0;
 }

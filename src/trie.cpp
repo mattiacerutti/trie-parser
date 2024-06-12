@@ -249,6 +249,7 @@ bool trie<T>::operator!=(trie<T> const& other) const {
 
 template <typename T>
 trie<T>& trie<T>::operator[](std::vector<T> const& path) {
+
    trie<T>* current = this;
 
    for (T label : path) {
@@ -256,8 +257,6 @@ trie<T>& trie<T>::operator[](std::vector<T> const& path) {
 
       if (tmp != nullptr) {
          current = tmp;
-      } else {
-         break;
       }
    }
 
@@ -273,8 +272,6 @@ trie<T> const& trie<T>::operator[](std::vector<T> const& path) const {
 
       if (tmp != nullptr) {
          current = tmp;
-      } else {
-         break;
       }
    }
 
