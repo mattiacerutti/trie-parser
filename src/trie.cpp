@@ -20,7 +20,7 @@ template <typename T>
 void trie<T>::set_label(T* l) {
    // Set the label only if node IS NOT the root (meaning it has a parent)
 
-   if(l == nullptr){
+   if (l == nullptr) {
       this->m_l = nullptr;
       return;
    }
@@ -28,10 +28,9 @@ void trie<T>::set_label(T* l) {
    // If is root node, it should not have a label
    if (this->m_p == nullptr) {
       throw parser_exception(
-            "Root node should not have a label. If you're trying to set a "
-            "label "
-            "for a child node, please call set_parent first");
-      
+          "Root node should not have a label. If you're trying to set a "
+          "label "
+          "for a child node, please call set_parent first");
    }
 
    // Create new label from the old one
@@ -134,7 +133,6 @@ trie<T>::trie(double w) {
    this->m_w = w;
 }
 
-
 template <typename T>
 trie<T>::~trie() {
    delete this->m_l;
@@ -149,7 +147,6 @@ trie<T>::~trie() {
 /* Copy Constructor */
 template <typename T>
 trie<T>::trie(trie<T> const& other) {
-
    if (other.get_label() == nullptr) {
       this->m_l = nullptr;
    } else {
@@ -211,36 +208,37 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
 
 template <typename T>
 bool trie<T>::operator==(trie<T> const& other) const {
-
-   if(&other == nullptr || this == nullptr){
+   if (&other == nullptr || this == nullptr) {
       return false;
    }
 
    /* Label Check */
-   if((this->m_l && other.m_l && *this->m_l != *other.m_l) || (this->m_l == nullptr && other.m_l != nullptr) || (this->m_l != nullptr && other.m_l == nullptr)){
+   if ((this->m_l && other.m_l && *this->m_l != *other.m_l) ||
+       (this->m_l == nullptr && other.m_l != nullptr) ||
+       (this->m_l != nullptr && other.m_l == nullptr)) {
       return false;
    }
 
    /* Weight Check */
-   if(abs(this->m_w - other.m_w) > 1e-6){
+   if (abs(this->m_w - other.m_w) > 1e-6) {
       return false;
    }
 
    /* Children size check */
-   if(this->m_c.size() != other.m_c.size()){
+   if (this->m_c.size() != other.m_c.size()) {
       return false;
    }
-   
-    /* Children check */
-   for(auto it = this->m_c.begin(), it2 = other.m_c.begin(); it != this->m_c.end() && it2 != other.m_c.end(); ++it, ++it2){
-      if(*it != *it2){
+
+   /* Children check */
+   for (auto it = this->m_c.begin(), it2 = other.m_c.begin();
+        it != this->m_c.end() && it2 != other.m_c.end(); ++it, ++it2) {
+      if (*it != *it2) {
          return false;
       }
    }
 
    return true;
 }
-
 
 template <typename T>
 bool trie<T>::operator!=(trie<T> const& other) const {
@@ -249,7 +247,6 @@ bool trie<T>::operator!=(trie<T> const& other) const {
 
 template <typename T>
 trie<T>& trie<T>::operator[](std::vector<T> const& path) {
-
    trie<T>* current = this;
 
    for (T label : path) {
@@ -279,20 +276,19 @@ trie<T> const& trie<T>::operator[](std::vector<T> const& path) const {
 }
 
 string getNextChunk(istream& is, char customDelimiter = ' ') {
-
    string chunk = "";
    char buffer;
 
-   do{
+   do {
       is >> buffer;
       if (is.eof() || is.peek() == EOF) {
          throw parser_exception("Unexpected end of file");
       }
       chunk.push_back(buffer);
-   } while(is.peek() != ' ' && is.peek() != '\t'  && is.peek() != '\n' && is.peek() != customDelimiter);
+   } while (is.peek() != ' ' && is.peek() != '\t' && is.peek() != '\n' &&
+            is.peek() != customDelimiter);
 
    return chunk;
-
 }
 
 char getNextChar(istream& is, bool isCharMandatory = true) {
@@ -312,7 +308,9 @@ void C(istream& is) {
 
    if (firstChunk != "children") {
       throw parser_exception(
-          "Invalid input: expected children but got something else: '" + firstChunk + "'" + ". This "
+          "Invalid input: expected children but got something else: '" +
+          firstChunk + "'" +
+          ". This "
           "usually happens when a node has another property other than "
           "weight and label. (or just weight if it's the root)");
    }
@@ -329,7 +327,9 @@ void B(istream& is, bool& shouldEspectLeaf, trie<T>& currentTrie) {
       try {
          currentTrie.set_weight(stod(firstChunk));
       } catch (const invalid_argument& e) {
-         throw parser_exception("Invalid input: expected a weight, instead got: '" + firstChunk + "'.");
+         throw parser_exception(
+             "Invalid input: expected a weight, instead got: '" + firstChunk +
+             "'.");
       }
 
       shouldEspectLeaf = true;
@@ -390,7 +390,8 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
       // We are in the root
 
       throw parser_exception(
-          "Invalid input: non-root nodes should have a label, instead got children keyword");
+          "Invalid input: non-root nodes should have a label, instead got "
+          "children keyword");
 
    } else {
       // We are in a child and firstChunk is a label
@@ -401,7 +402,8 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
           firstChunk.find(',') != string::npos) {
          throw parser_exception(
              "Invalid input: got unexpected character in the beginning of "
-             "the string: '" + firstChunk + "ì");
+             "the string: '" +
+             firstChunk + "ì");
       }
 
       using trieType = decay_t<T>;
@@ -450,14 +452,16 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
    char tmp = getNextChar(is);
    if (tmp != '=') {
       throw parser_exception(
-          "Invalid input: expected = but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected = but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    // Check if there is "{"
    tmp = getNextChar(is);
    if (tmp != '{') {
       throw parser_exception(
-          "Invalid input: expected { but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected { but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    R(is, shouldEspectLeaf, currentTrie);
@@ -466,7 +470,8 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
    tmp = getNextChar(is);
    if (tmp != '}') {
       throw parser_exception(
-          "Invalid input: expected } but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected } but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    /* Here we correctly inserted all children */
@@ -497,7 +502,6 @@ void S(istream& is, trie<T>& currentTrie, trie<T>& parentTrie) {
 
 template <typename T>
 void S(istream& is, trie<T>& currentTrie) {
-
    bool shouldEspectLeaf = false;
 
    B(is, shouldEspectLeaf, currentTrie);
@@ -508,14 +512,16 @@ void S(istream& is, trie<T>& currentTrie) {
    char tmp = getNextChar(is);
    if (tmp != '=') {
       throw parser_exception(
-          "Invalid input: expected = but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected = but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    // Check if there is "{"
    tmp = getNextChar(is);
    if (tmp != '{') {
       throw parser_exception(
-          "Invalid input: expected { but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected { but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    R(is, shouldEspectLeaf, currentTrie);
@@ -524,7 +530,8 @@ void S(istream& is, trie<T>& currentTrie) {
    tmp = getNextChar(is);
    if (tmp != '}') {
       throw parser_exception(
-          "Invalid input: expected } but got something else: '" + string(1, tmp) + "'");
+          "Invalid input: expected } but got something else: '" +
+          string(1, tmp) + "'");
    }
 
    /* Here we correctly inserted all children */
@@ -534,7 +541,8 @@ void S(istream& is, trie<T>& currentTrie) {
    if (thirdChar != '\0') {
       // We have a sibling
       throw parser_exception(
-          "Invalid input: Unexpected character after the end of the root: '" + string(1, thirdChar) + "'");
+          "Invalid input: Unexpected character after the end of the root: '" +
+          string(1, thirdChar) + "'");
    }
 }
 
@@ -612,7 +620,6 @@ trie<T>::const_node_iterator::const_node_iterator(trie<T> const* ptr)
 template <typename T>
 typename trie<T>::const_node_iterator&
 trie<T>::const_node_iterator::operator++() {
-   
    if (m_ptr->m_p == nullptr) {
       throw parser_exception("Node has no parent");
    }
@@ -635,7 +642,6 @@ typename trie<T>::const_node_iterator trie<T>::const_node_iterator::operator++(
 template <typename T>
 typename trie<T>::const_node_iterator::reference
 trie<T>::const_node_iterator::operator*() const {
-   
    if (m_ptr->m_l == nullptr) {
       throw parser_exception("Invalid input: node has no label");
    }
@@ -1005,19 +1011,17 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
    if (tr->get_children().size() == 0) {
       // We are in a leaf
       if (other) {
+         //FIXME: We don'0t check labels
          if (other->get_children().size() > 0) {
             double trWeight = tr->get_weight();
             // Add all other's children to tr
-            for (typename bag<trie<T>>::const_child_iterator it =
-                     other->get_children().begin();
+            for (auto it = other->get_children().begin();
                  it != other->get_children().end(); ++it) {
                tr->add_child(*it);
             }
 
-            for (typename trie<T>::leaf_iterator leaf_it = tr->begin();
-                 leaf_it != tr->end(); ++leaf_it) {
-               leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() +
-                                             trWeight);
+            for (auto leaf_it = tr->begin(); leaf_it != tr->end(); ++leaf_it) {
+               leaf_it.get_leaf().set_weight(leaf_it.get_leaf().get_weight() + trWeight);
             }
          } else {
             // Sum the weights
@@ -1025,6 +1029,7 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
          }
       }
    } else {
+
       if (other->get_children().size() > 0) {
          for (int i = 0; i < other->get_children().size(); i++) {
             trie<T>* otherChild = other->get_children().get(i);
@@ -1044,6 +1049,7 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
                                           other->get_weight());
          }
       }
+      
    }
 }
 
