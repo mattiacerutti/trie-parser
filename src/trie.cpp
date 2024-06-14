@@ -39,22 +39,12 @@ void trie<T>::set_label(T* l) {
 
 template <typename T>
 T const* trie<T>::get_label() const {
-   // Return the label only if node IS NOT the root (meaning it has a parent)
-   if (this->m_p != nullptr) {
-      return this->m_l;
-   }
-
-   return nullptr;
+   return this->m_l;
 }
 
 template <typename T>
 T* trie<T>::get_label() {
-   // Return the label only if node IS NOT the root (meaning it has a parent)
-   if (this->m_p != nullptr) {
-      return this->m_l;
-   }
-
-   return nullptr;
+   return this->m_l;
 }
 
 template <typename T>
@@ -78,12 +68,6 @@ void trie<T>::add_child(trie<T> const& c) {
    if (c.get_label() == nullptr) {
       throw parser_exception(
           "Child node should have a valid label before being added");
-   }
-
-   // Should have a valid parent before being added
-   if (c.get_parent() == nullptr) {
-      throw parser_exception(
-          "Child node should have a valid parent before being added");
    }
 
    // Check if there are any siblings with the same label
@@ -202,9 +186,6 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
 
 template <typename T>
 bool trie<T>::operator==(trie<T> const& other) const {
-   if (&other == nullptr) {
-      return false;
-   }
 
    /* Label Check */
    if ((this->m_l && other.m_l && *this->m_l != *other.m_l) ||
@@ -996,9 +977,9 @@ const trie<T>& trie<T>::max() const {
 template <typename T>
 void addWithRecurion(trie<T>* tr, const trie<T>* other) {
 
+   if(!other) return;
+
    if (tr->get_children().size() == 0) {
-      // If the other isn't this deep, we do nothing
-      if (!other) return;
 
       // If the other is a leaf, we just add the weights
       if (other->get_children().size() == 0) {
@@ -1028,7 +1009,7 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
 
    // If tr isn't a leaf, and other is, we just add the other's weight to all tr leaf
    if(other->get_children().size() == 0){
-      for (typename trie<T>::leaf_iterator it = tr->begin(); it != tr->end(); ++it) {
+      for (auto it = tr->begin(); it != tr->end(); ++it) {
          trie<T>& currentLeaf = it.get_leaf();
 
          currentLeaf.set_weight(currentLeaf.get_weight() + other->get_weight());
@@ -1037,19 +1018,18 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
    }
 
    // If both tr and other are not leaves, we need to add the other's children to tr
-   for (int i = 0; i < other->get_children().size(); i++) {
-      trie<T>* otherChild = other->get_children().get(i);
+   for (auto it = other->get_children().begin(); it != other->get_children().end(); ++it) {
+      const trie<T>* otherChild = &(*it);
       trie<T>* trChild = tr->get_children().getWithLabel(*otherChild->get_label());
 
+      // If tr does not have a child with the same label, we just add other's child
       if (!trChild) {
          tr->add_child(*otherChild);
          continue;
       } 
       
       addWithRecurion(trChild, otherChild);
-      
    }
-   
 }
 
 template <typename T>
@@ -1065,7 +1045,8 @@ trie<T> trie<T>::operator+(trie<T> const& other) const {
 
 template <typename T>
 trie<T>& trie<T>::operator+=(trie<T> const& other) {
-   *this = *this + other;
+
+   addWithRecurion(this, &other);
 
    return *this;
 }
@@ -1078,7 +1059,7 @@ void compressWithRecursion(trie<T>* tr) {
 
    for (typename bag<trie<T>>::child_iterator it = tr->get_children().begin();
         it != tr->get_children().end(); ++it) {
-      compressWithRecursion(&(*it));
+         compressWithRecursion(&(*it));
    }
 
    if (tr->get_parent() != nullptr && tr->get_children().size() == 1) {
@@ -1103,7 +1084,7 @@ void traverseRecursive(ostream& os, const trie<T>& tr) {
       os << *tr.get_label() << " ";
    }
 
-   if (tr.get_weight() != 0.0) {
+   if (tr.get_children().size() == 0){
       os << tr.get_weight() << " ";
    }
 

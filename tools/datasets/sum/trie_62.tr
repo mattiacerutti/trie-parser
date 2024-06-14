@@ -1,0 +1,19 @@
+children = {
+	a children = {
+		b 11 children = {}
+	},
+	b children = {
+        c children = {
+            d children = {
+                f 14 children = {}
+            }
+        },
+        e 6 children = {}
+    },
+    c children = {
+        d 14 children = {},
+        e children = {
+            f 16 children = {}
+        }
+    }
+}

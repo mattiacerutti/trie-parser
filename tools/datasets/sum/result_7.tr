@@ -1,0 +1,94 @@
+children = {
+	a 0.32 children = {},
+	b children = {
+		w children = {
+			p children = {
+				n children = {
+					i 5.36 children = {},
+					w 4.04 children = {}
+				}
+			}
+		}
+	},
+	c children = {
+		i children = {
+			g children = {
+				j children = {
+					m children = {
+						e 7.92 children = {},
+						q 6.5 children = {}
+					}
+				}
+			}
+		}
+	},
+	d children = {
+		a 0 children = {}
+	},
+	e 7.13 children = {},
+	f 4.74 children = {},
+	g 1.59 children = {},
+	h children = {
+		m children = {
+			a 7.78 children = {},
+			z 0 children = {}
+		}
+	},
+	i 6.18 children = {},
+	j 7.35 children = {},
+	k 5.19 children = {},
+	l children = {
+		b children = {
+			g 5.11 children = {},
+			x 11.74 children = {}
+		}
+	},
+	m 6.11 children = {},
+	n 8.48 children = {},
+	o 5.48 children = {},
+	p 0 children = {},
+	q children = {
+		u children = {
+			f children = {
+				i 0 children = {}
+			},
+			g 8.56 children = {}
+		}
+	},
+	r children = {
+		f 5.81 children = {},
+		x children = {
+			b 0.14 children = {}
+		}
+	},
+	s children = {
+		j 0 children = {}
+	},
+	t 7.11 children = {},
+	u children = {
+		g children = {
+			a children = {
+				i 0 children = {},
+				v 0.42 children = {}
+			},
+			j 4.49 children = {}
+		}
+	},
+	v children = {
+		x children = {
+			a 1.31 children = {}
+		}
+	},
+	w children = {
+		t 11.6 children = {}
+	},
+	x 8.2 children = {},
+	y 7.96 children = {},
+	z children = {
+		j children = {
+			d children = {
+				h 0 children = {}
+			}
+		}
+	}
+}

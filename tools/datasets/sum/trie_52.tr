@@ -1,0 +1,17 @@
+children = {
+    a 6 children = {},
+    b children = {
+        c children = {
+            d children = {
+                f 8 children = {}
+            }
+        },
+        e 6 children = {}
+    },
+    c children = {
+        d 7 children = {},
+        e children = {
+            f 8 children = {}
+        }
+    }
+}

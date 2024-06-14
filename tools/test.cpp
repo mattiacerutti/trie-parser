@@ -15,6 +15,11 @@ trie<T> load_trie(string filePath) {
    trie<T> t;
    string fullPath = (string)WORKSPACE_PATH + "/tools/datasets/" + filePath;
    std::ifstream file(fullPath);
+
+   if (!file.is_open()) {
+      throw parser_exception("Could not open file: " + fullPath);
+   }
+
    file >> t;
    file.close();
    return t;
@@ -286,7 +291,6 @@ void test_trie_sum(){
       expectedResult = load_trie<char>("sum/result_2.tr");
       assert(expectedResult == t1 + t2);
 
-      expectedResult = load_trie<char>("sum/result_2.tr");
       t1 += t2;
       assert(expectedResult == t1);
 
@@ -300,6 +304,43 @@ void test_trie_sum(){
       t2 = load_trie<char>("sum/trie_42.tr");
       expectedResult = load_trie<char>("sum/result_4.tr");
       assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_51.tr");
+      t2 = load_trie<char>("sum/trie_52.tr");
+      expectedResult = load_trie<char>("sum/result_5.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_61.tr");
+      t2 = load_trie<char>("sum/trie_62.tr");
+      expectedResult = load_trie<char>("sum/result_6.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_71.tr");
+      t2 = load_trie<char>("sum/trie_72.tr");
+      expectedResult = load_trie<char>("sum/result_7.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_81.tr");
+      t2 = load_trie<char>("sum/trie_82.tr");
+      expectedResult = load_trie<char>("sum/result_8.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_91.tr");
+      t2 = load_trie<char>("sum/trie_92.tr");
+      expectedResult = load_trie<char>("sum/result_9.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_101.tr");
+      t2 = load_trie<char>("sum/trie_102.tr");
+      expectedResult = load_trie<char>("sum/result_10.tr");
+      assert(expectedResult == t1 + t2);
+
+      t1 = load_trie<char>("sum/trie_111.tr");
+      t2 = load_trie<char>("sum/trie_112.tr");
+      expectedResult = load_trie<char>("sum/result_11.tr");
+      assert(expectedResult == t1 + t2);
+
+
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;

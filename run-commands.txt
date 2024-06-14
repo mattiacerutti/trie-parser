@@ -5,4 +5,4 @@ TEST WITH FILE PARSING:
 clear && g++ src/trie.cpp -std=c++17 -o trie.o && ./trie.o < test.txt
 
 TEST:
-g++ --std=c++17 -Wsign-compare -Wparentheses tools/test.cpp -o tools/test.o && ./tools/test.o
+g++ --std=c++17 -Wsign-compare -Wparentheses -Waddress -Wnonnull-compare tools/test.cpp -o tools/test.o && ./tools/test.o
