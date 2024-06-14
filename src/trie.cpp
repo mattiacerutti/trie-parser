@@ -188,11 +188,11 @@ template <typename T>
 bool trie<T>::operator==(trie<T> const& other) const {
 
    /* Label Check */
-   if ((this->m_l && other.m_l && *this->m_l != *other.m_l) ||
-       (this->m_l == nullptr && other.m_l != nullptr) ||
-       (this->m_l != nullptr && other.m_l == nullptr)) {
-      return false;
-   }
+   // if ((this->m_l && other.m_l && *this->m_l != *other.m_l) ||
+   //     (this->m_l == nullptr && other.m_l != nullptr) ||
+   //     (this->m_l != nullptr && other.m_l == nullptr)) {
+   //    return false;
+   // }
 
    /* Weight Check */
    if (this->m_c.size() == 0 && abs(this->m_w - other.m_w) > 1e-6) {
@@ -572,11 +572,7 @@ typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->()
 
 template <typename T>
 bool trie<T>::node_iterator::operator==(node_iterator const& it) const {
-   if (this->m_ptr == it.m_ptr) return true;
-
-   if (this->m_ptr == nullptr || it.m_ptr == nullptr) return false;
-
-   return *this->m_ptr == *it.m_ptr;
+   return this->m_ptr == it.m_ptr;
 }
 
 template <typename T>
@@ -631,11 +627,7 @@ trie<T>::const_node_iterator::operator->() const {
 template <typename T>
 bool trie<T>::const_node_iterator::operator==(
     const_node_iterator const& it) const {
-   if (this->m_ptr == it.m_ptr) return true;
-
-   if (this->m_ptr == nullptr || it.m_ptr == nullptr) return false;
-
-   return *this->m_ptr == *it.m_ptr;
+   return this->m_ptr == it.m_ptr;
 }
 
 template <typename T>
@@ -697,11 +689,7 @@ typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->()
 
 template <typename T>
 bool trie<T>::leaf_iterator::operator==(leaf_iterator const& it) const {
-   if (this->m_ptr == it.m_ptr) return true;
-
-   if (this->m_ptr == nullptr || it.m_ptr == nullptr) return false;
-
-   return *this->m_ptr == *it.m_ptr;
+   return this->m_ptr == it.m_ptr;
 }
 
 template <typename T>
@@ -810,11 +798,7 @@ trie<T>::const_leaf_iterator::operator->() const {
 template <typename T>
 bool trie<T>::const_leaf_iterator::operator==(
     const_leaf_iterator const& it) const {
-   if (this->m_ptr == it.m_ptr) return true;
-
-   if (this->m_ptr == nullptr || it.m_ptr == nullptr) return false;
-
-   return *this->m_ptr == *it.m_ptr;
+   return this->m_ptr == it.m_ptr;
 }
 
 template <typename T>
