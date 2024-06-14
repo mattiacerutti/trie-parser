@@ -71,6 +71,24 @@ struct bag<trie<T>> {
       return *this;
    }
 
+   bool operator==(bag const& other) const {
+
+      if (this->size() != other.size()) {
+         return false;
+      }
+
+      for (int i = 0; i < this->size(); i++) {
+         if (*this->nodes[i] != *other.nodes[i]) {
+            return false;
+         }
+      }
+
+      return true;
+   }
+
+   bool operator!=(bag const& other) const { return !(*this == other); }
+
+
    // Methods
    void add(trie<T>* node) {
       if (nodes.size() == 0) {
@@ -114,6 +132,16 @@ struct bag<trie<T>> {
       return nodes[i];
    }
 
+   int getChildIndex(const T* label) const {
+      for (int i = 0; i < (int)nodes.size(); i++) {
+         if (*nodes[i]->get_label() == *label) {
+            return i;
+         }
+      }
+
+      return -1;
+   }
+
    void setParent(trie<T>* parent) {
       for (auto node : nodes) {
          node->set_parent(parent);
@@ -128,7 +156,6 @@ struct bag<trie<T>> {
       for(auto tr : newArr){
          this->add(tr);
       }
-
    }
 
    int size() const { return nodes.size(); }

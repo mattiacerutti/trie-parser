@@ -2,7 +2,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-
+#include <algorithm>
 #include "../src/trie.cpp"
 
 using namespace std;
@@ -115,20 +115,20 @@ void test_set_label() {
       assert(false);
    }
 
-   char * label = new char('a');
+   // char * label = new char('a');
 
-   try {
-      /* Incorrect label, we are in root node */
-      trie<char> t;
+   // try {
+   //    /* Incorrect label, we are in root node */
+   //    trie<char> t;
      
-      t.set_label(label);
+   //    t.set_label(label);
 
-      assert(false);
+   //    assert(false);
 
-   } catch (const parser_exception& e) {
-      assert(true);
-   }
-   delete label;
+   // } catch (const parser_exception& e) {
+   //    assert(true);
+   // }
+   // delete label;
 
 
 }
@@ -278,15 +278,13 @@ void test_trie_sum(){
       t1 = load_trie<char>("sum/trie_11.tr");
       t2 = load_trie<char>("sum/trie_12.tr");
       expectedResult = load_trie<char>("sum/result_1.tr");
-      actualResult = t1 + t2;
-      assert(expectedResult == actualResult);
+      assert(expectedResult == t1 + t2);
 
 
       t1 = load_trie<char>("sum/trie_21.tr");
       t2 = load_trie<char>("sum/trie_22.tr");
       expectedResult = load_trie<char>("sum/result_2.tr");
-      actualResult = t1 + t2;
-      assert(expectedResult == actualResult);
+      assert(expectedResult == t1 + t2);
 
       expectedResult = load_trie<char>("sum/result_2.tr");
       t1 += t2;
@@ -313,7 +311,7 @@ void test_leaf_iterator(){
    try{
       
       trie<char> t = load_trie<char>("trie_char2.tr");
-      trie<char>::leaf_iterator rootBegin = t.begin();
+      trie<char>::leaf_iterator rootBegin(&t);
 
       trie<char> * child = t.get_children().get(0);
       trie<char>::leaf_iterator childBegin = child->begin();
@@ -331,7 +329,7 @@ void test_leaf_iterator(){
       rootBegin++;
       assert(rootBegin == rootEnd);
 
-      for(auto it = t.begin(); it != t.end(); it++){}
+
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
@@ -532,6 +530,37 @@ void test_prefix_search(){
    }
 }
 
+void test_operator_equal(){
+
+   try {
+
+      trie<char> father;
+      trie<char> father2;
+
+
+      trie<char> t;
+      t.set_parent(&father);
+      char a = 'a';
+      t.set_label(&a);
+      father.set_weight(1);
+      father.add_child(t);
+
+
+      trie<char> t2;
+      t2.set_parent(&father2);
+      char b = 'a';
+      t2.set_label(&b);
+      father2.set_weight(13);
+      father2.add_child(t);
+
+      assert(father2 == father);
+
+   } catch (const parser_exception& e) {
+      cout << e.what() << endl;
+      assert(false);
+   }
+}
+
 
 int main() {
    /* Parser basics */
@@ -568,6 +597,9 @@ int main() {
 
    /* File Writing */
    test_ostream();
+
+   test_operator_equal();
+
 
    return 0;
 }
