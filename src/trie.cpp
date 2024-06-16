@@ -185,14 +185,46 @@ trie<T>& trie<T>::operator=(trie<T>&& other) {
 }
 
 template <typename T>
-bool trie<T>::operator==(trie<T> const& other) const {
+bool areTrieEqual(trie<T> const& a, trie<T> const& b) {
+
+   T const* a_label = a.get_label();
+   T const* b_label = b.get_label();
+
+   // If one of the two is null and the other is not
+   if((a_label == nullptr) != (b_label == nullptr)) { 
+      return false;
+   }
 
    /* Label Check */
-   // if ((this->m_l && other.m_l && *this->m_l != *other.m_l) ||
-   //     (this->m_l == nullptr && other.m_l != nullptr) ||
-   //     (this->m_l != nullptr && other.m_l == nullptr)) {
-   //    return false;
-   // }
+   if(a_label != nullptr && b_label != nullptr && *a_label != *b_label) {
+      return false;
+   }
+
+   /* Children Size Check */
+   if (a.get_children().size() != b.get_children().size()) {
+      return false;
+   }
+
+   /* Weight Check */
+   if (a.get_children().size() == 0 && abs(a.get_weight() - b.get_weight()) > 1e-6) {
+      return false;
+   }
+
+   /* Children check */
+   if (a.get_children() != b.get_children()) {
+      return false;
+   }
+
+   return true;
+}
+
+template <typename T>
+bool trie<T>::operator==(trie<T> const& other) const {
+   
+   /* Children Size Check */
+   if (this->m_c.size() != other.m_c.size()) {
+      return false;
+   }
 
    /* Weight Check */
    if (this->m_c.size() == 0 && abs(this->m_w - other.m_w) > 1e-6) {
@@ -960,11 +992,9 @@ const trie<T>& trie<T>::max() const {
 
 template <typename T>
 void addWithRecurion(trie<T>* tr, const trie<T>* other) {
-
-   if(!other) return;
+   if (!other) return;
 
    if (tr->get_children().size() == 0) {
-
       // If the other is a leaf, we just add the weights
       if (other->get_children().size() == 0) {
          tr->set_weight(tr->get_weight() + other->get_weight());
@@ -991,8 +1021,9 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
       return;
    }
 
-   // If tr isn't a leaf, and other is, we just add the other's weight to all tr leaf
-   if(other->get_children().size() == 0){
+   // If tr isn't a leaf, and other is, we just add the other's weight to all tr
+   // leaf
+   if (other->get_children().size() == 0) {
       for (auto it = tr->begin(); it != tr->end(); ++it) {
          trie<T>& currentLeaf = it.get_leaf();
 
@@ -1001,17 +1032,21 @@ void addWithRecurion(trie<T>* tr, const trie<T>* other) {
       return;
    }
 
-   // If both tr and other are not leaves, we need to add the other's children to tr
-   for (auto it = other->get_children().begin(); it != other->get_children().end(); ++it) {
+   // If both tr and other are not leaves, we need to add the other's children
+   // to tr
+   for (auto it = other->get_children().begin();
+        it != other->get_children().end(); ++it) {
       const trie<T>* otherChild = &(*it);
-      trie<T>* trChild = tr->get_children().getWithLabel(*otherChild->get_label());
+      trie<T>* trChild =
+          tr->get_children().getWithLabel(*otherChild->get_label());
 
-      // If tr does not have a child with the same label, we just add other's child
+      // If tr does not have a child with the same label, we just add other's
+      // child
       if (!trChild) {
          tr->add_child(*otherChild);
          continue;
-      } 
-      
+      }
+
       addWithRecurion(trChild, otherChild);
    }
 }
@@ -1029,7 +1064,6 @@ trie<T> trie<T>::operator+(trie<T> const& other) const {
 
 template <typename T>
 trie<T>& trie<T>::operator+=(trie<T> const& other) {
-
    addWithRecurion(this, &other);
 
    return *this;
@@ -1043,7 +1077,7 @@ void compressWithRecursion(trie<T>* tr) {
 
    for (typename bag<trie<T>>::child_iterator it = tr->get_children().begin();
         it != tr->get_children().end(); ++it) {
-         compressWithRecursion(&(*it));
+      compressWithRecursion(&(*it));
    }
 
    if (tr->get_parent() != nullptr && tr->get_children().size() == 1) {
@@ -1068,7 +1102,7 @@ void traverseRecursive(ostream& os, const trie<T>& tr) {
       os << *tr.get_label() << " ";
    }
 
-   if (tr.get_children().size() == 0){
+   if (tr.get_children().size() == 0) {
       os << tr.get_weight() << " ";
    }
 

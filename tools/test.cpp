@@ -1,8 +1,9 @@
+#include <algorithm>
 #include <cassert>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <algorithm>
+
 #include "../src/trie.cpp"
 
 using namespace std;
@@ -47,56 +48,64 @@ void parsing_should_complete(string filePath, T type) {
 }
 
 int count_error_files(const fs::path& directory, string type) {
-    int count = 0;
+   int count = 0;
 
-    for (const auto& entry : fs::directory_iterator(directory)) {
-        if (entry.is_regular_file() && entry.path().filename().string().find("error") != std::string::npos && entry.path().filename().string().find(type) != std::string::npos) {
-            ++count;
-        }
-    }
+   for (const auto& entry : fs::directory_iterator(directory)) {
+      if (entry.is_regular_file() &&
+          entry.path().filename().string().find("error") != std::string::npos &&
+          entry.path().filename().string().find(type) != std::string::npos) {
+         ++count;
+      }
+   }
 
-    return count;
+   return count;
 }
 
 int count_non_error_files(const fs::path& directory, string type) {
-    int count = 0;
+   int count = 0;
 
-    for (const auto& entry : fs::directory_iterator(directory)) {
-        if (entry.is_regular_file() && entry.path().filename().string().find("error") == std::string::npos && entry.path().filename().string().find(type) != std::string::npos) {
-            ++count;
-        }
-    }
+   for (const auto& entry : fs::directory_iterator(directory)) {
+      if (entry.is_regular_file() &&
+          entry.path().filename().string().find("error") == std::string::npos &&
+          entry.path().filename().string().find(type) != std::string::npos) {
+         ++count;
+      }
+   }
 
-    return count;
+   return count;
 }
 
 void test_parsing_validation() {
+   int char_error_files = count_error_files(
+       fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
+   int string_error_files = count_error_files(
+       fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
 
-   int char_error_files = count_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
-   int string_error_files = count_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
-
-   int char_non_error_files = count_non_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
-   int string_non_error_files = count_non_error_files(fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
+   int char_non_error_files = count_non_error_files(
+       fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "char");
+   int string_non_error_files = count_non_error_files(
+       fs::path((string)WORKSPACE_PATH + "/tools/datasets"), "string");
 
    // Should throw exceptions -- char
-   for(int i = 1; i <= char_error_files; i++) {
-      parsing_should_throw_exception("trie_char_error" + to_string(i) + ".tr", char());
+   for (int i = 1; i <= char_error_files; i++) {
+      parsing_should_throw_exception("trie_char_error" + to_string(i) + ".tr",
+                                     char());
    }
    // Should throw exceptions -- string
-   for(int i = 1; i <= string_error_files; i++) {
-      parsing_should_throw_exception("trie_string_error" + to_string(i) + ".tr", string());
+   for (int i = 1; i <= string_error_files; i++) {
+      parsing_should_throw_exception("trie_string_error" + to_string(i) + ".tr",
+                                     string());
    }
 
    // Should complete -- char
-   for(int i = 1; i <= char_non_error_files; i++) {
+   for (int i = 1; i <= char_non_error_files; i++) {
       parsing_should_complete("trie_char" + to_string(i) + ".tr", char());
    }
 
    // Should complete -- string
-   for(int i = 1; i <= string_non_error_files; i++) {
+   for (int i = 1; i <= string_non_error_files; i++) {
       parsing_should_complete("trie_string" + to_string(i) + ".tr", string());
    }
-
 }
 
 void test_set_label() {
@@ -107,7 +116,7 @@ void test_set_label() {
 
       t2.set_parent(&t);
 
-      char * label = new char('a');
+      char* label = new char('a');
       t2.set_label(label);
       delete label;
 
@@ -125,7 +134,7 @@ void test_set_label() {
    // try {
    //    /* Incorrect label, we are in root node */
    //    trie<char> t;
-     
+
    //    t.set_label(label);
 
    //    assert(false);
@@ -134,8 +143,6 @@ void test_set_label() {
    //    assert(true);
    // }
    // delete label;
-
-
 }
 
 void test_set_weight() {
@@ -202,7 +209,6 @@ void test_bag_iterator() {
       bag<trie<char>>::child_iterator second_it = it->get_children().begin();
       assert(second_it == it->get_children().end());
 
-
       it++;
       second_it = it->get_children().begin();
       assert(*second_it->get_label() == 'b');
@@ -252,7 +258,8 @@ void test_const_bag_iterator() {
 
       // Check if sub-iterator works
       it = t.get_children().begin();
-      bag<trie<char>>::const_child_iterator second_it = it->get_children().begin();
+      bag<trie<char>>::const_child_iterator second_it =
+          it->get_children().begin();
       assert(second_it == it->get_children().end());
 
       it++;
@@ -270,8 +277,8 @@ void test_const_bag_iterator() {
    }
 }
 
-void test_trie_sum(){
-    try {
+void test_trie_sum() {
+   try {
       /* First test */
       trie<char> t1 = load_trie<char>("sum/trie_01.tr");
       trie<char> t2 = load_trie<char>("sum/trie_02.tr");
@@ -279,12 +286,10 @@ void test_trie_sum(){
       trie<char> actualResult = t1 + t2;
       assert(expectedResult == actualResult);
 
-
       t1 = load_trie<char>("sum/trie_11.tr");
       t2 = load_trie<char>("sum/trie_12.tr");
       expectedResult = load_trie<char>("sum/result_1.tr");
       assert(expectedResult == t1 + t2);
-
 
       t1 = load_trie<char>("sum/trie_21.tr");
       t2 = load_trie<char>("sum/trie_22.tr");
@@ -340,21 +345,18 @@ void test_trie_sum(){
       expectedResult = load_trie<char>("sum/result_11.tr");
       assert(expectedResult == t1 + t2);
 
-
-
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
    }
 }
 
-void test_leaf_iterator(){
-   try{
-      
+void test_leaf_iterator() {
+   try {
       trie<char> t = load_trie<char>("trie_char2.tr");
       trie<char>::leaf_iterator rootBegin(&t);
 
-      trie<char> * child = t.get_children().get(0);
+      trie<char>* child = t.get_children().get(0);
       trie<char>::leaf_iterator childBegin = child->begin();
 
       assert(rootBegin.get_leaf() == childBegin.get_leaf());
@@ -364,13 +366,17 @@ void test_leaf_iterator(){
 
       assert(childEnd.get_leaf() == *t.get_children().get(1));
 
-      assert((rootBegin++).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(0));
-      assert((rootBegin).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(1));
+      assert(
+          (rootBegin++).get_leaf() ==
+          *t.get_children().get(0)->get_children().get(0)->get_children().get(
+              0));
+      assert(
+          (rootBegin).get_leaf() ==
+          *t.get_children().get(0)->get_children().get(0)->get_children().get(
+              1));
       assert((++rootBegin).get_leaf() == childEnd.get_leaf());
       rootBegin++;
       assert(rootBegin == rootEnd);
-
-
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
@@ -378,13 +384,12 @@ void test_leaf_iterator(){
    }
 }
 
-void test_const_leaf_iterator(){
-   try{
-
+void test_const_leaf_iterator() {
+   try {
       const trie<char> t = load_trie<char>("trie_char2.tr");
       trie<char>::const_leaf_iterator rootBegin = t.begin();
 
-      const trie<char> * child = t.get_children().get(0);
+      const trie<char>* child = t.get_children().get(0);
       trie<char>::const_leaf_iterator childBegin = child->begin();
 
       assert(rootBegin.get_leaf() == childBegin.get_leaf());
@@ -394,14 +399,20 @@ void test_const_leaf_iterator(){
 
       assert(childEnd.get_leaf() == *t.get_children().get(1));
 
-      assert((rootBegin++).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(0));
-      assert((rootBegin).get_leaf() == *t.get_children().get(0)->get_children().get(0)->get_children().get(1));
+      assert(
+          (rootBegin++).get_leaf() ==
+          *t.get_children().get(0)->get_children().get(0)->get_children().get(
+              0));
+      assert(
+          (rootBegin).get_leaf() ==
+          *t.get_children().get(0)->get_children().get(0)->get_children().get(
+              1));
       assert((++rootBegin).get_leaf() == childEnd.get_leaf());
       rootBegin++;
       assert(rootBegin == rootEnd);
 
-      for(auto it = t.begin(); it != t.end(); it++){}
-
+      for (auto it = t.begin(); it != t.end(); it++) {
+      }
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
@@ -409,16 +420,18 @@ void test_const_leaf_iterator(){
    }
 }
 
-void test_node_iterator(){
-   try{
+void test_node_iterator() {
+   try {
       trie<char> t = load_trie<char>("trie_char5.tr");
       trie<char>::node_iterator root = t.root();
 
-      trie<char> * child = t.get_children().get(0)->get_children().get(0)->get_children().get(0);
+      trie<char>* child =
+          t.get_children().get(0)->get_children().get(0)->get_children().get(0);
       trie<char>::node_iterator childIT = trie<char>::node_iterator(child);
 
       assert(*child->get_label() == *(childIT++));
-      assert(*t.get_children().get(0)->get_children().get(0)->get_label() == *childIT);
+      assert(*t.get_children().get(0)->get_children().get(0)->get_label() ==
+             *childIT);
       assert(*t.get_children().get(0)->get_label() == *(++childIT));
 
       assert(root == ++childIT);
@@ -429,16 +442,19 @@ void test_node_iterator(){
    }
 }
 
-void test_const_node_iterator(){ 
-   try{
+void test_const_node_iterator() {
+   try {
       const trie<char> t = load_trie<char>("trie_char5.tr");
       trie<char>::const_node_iterator root = t.root();
 
-      const trie<char> * child = t.get_children().get(0)->get_children().get(0)->get_children().get(0);
-      trie<char>::const_node_iterator childIT = trie<char>::const_node_iterator(child);
+      const trie<char>* child =
+          t.get_children().get(0)->get_children().get(0)->get_children().get(0);
+      trie<char>::const_node_iterator childIT =
+          trie<char>::const_node_iterator(child);
 
       assert(*child->get_label() == *(childIT++));
-      assert(*t.get_children().get(0)->get_children().get(0)->get_label() == *childIT);
+      assert(*t.get_children().get(0)->get_children().get(0)->get_label() ==
+             *childIT);
       assert(*t.get_children().get(0)->get_label() == *(++childIT));
 
       assert(root == ++childIT);
@@ -449,28 +465,27 @@ void test_const_node_iterator(){
    }
 }
 
-void test_max_function(){
-   try{
+void test_max_function() {
+   try {
       trie<char> t = load_trie<char>("trie_char5.tr");
       assert(t.max() == *t.get_children().get(1));
 
       trie<char> childNode = *t.get_children().get(0);
-      assert(childNode.max() == *childNode.get_children().get(0)->get_children().get(1));
-      
+      assert(childNode.max() ==
+             *childNode.get_children().get(0)->get_children().get(1));
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
    }
 }
-void test_const_max_function(){
+void test_const_max_function() {}
 
-}
-
-void test_path_compression(){
-   try{
+void test_path_compression() {
+   try {
       trie<string> t = load_trie<string>("compression/trie_string1.tr");
-      trie<string> expectedResult = load_trie<string>("compression/result_1.tr");
+      trie<string> expectedResult =
+          load_trie<string>("compression/result_1.tr");
       t.path_compress();
       assert(expectedResult == t);
 
@@ -505,19 +520,18 @@ void test_path_compression(){
    }
 }
 
-void test_ostream(){
-   try{
+void test_ostream() {
+   try {
       trie<char> t = load_trie<char>("trie_char1.tr");
       // cout << t;
-   }
-   catch (const parser_exception& e) {
+   } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
    }
 }
 
-void test_copy_assignment(){
-   try{
+void test_copy_assignment() {
+   try {
       trie<char> t = load_trie<char>("trie_char1.tr");
       trie<char> t2;
       t2 = t;
@@ -526,22 +540,20 @@ void test_copy_assignment(){
       trie<char> t3 = load_trie<char>("trie_char1.tr");
       *t.get_children().get(0) = t3;
 
-      assert(*t.get_children().get(0)->get_children().get(1) == *t3.get_children().get(1));
+      assert(*t.get_children().get(0)->get_children().get(1) ==
+             *t3.get_children().get(1));
 
       t2 = t2;
       assert(t2 == load_trie<char>("trie_char1.tr"));
 
-   }
-   catch (const parser_exception& e) {
+   } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
    }
 }
 
-void test_prefix_search(){
-
+void test_prefix_search() {
    try {
-
       trie<char> t = load_trie<char>("trie_char1.tr");
 
       vector<char> path = {'a', 'b', 'c'};
@@ -551,8 +563,10 @@ void test_prefix_search(){
       assert(t[path] == t);
 
       path = {'z', 'b', 'e', 'c', 'b'};
-      assert(t[path] == *t.get_children().get(1)->get_children().get(1)->get_children().get(0));
-
+      assert(
+          t[path] ==
+          *t.get_children().get(1)->get_children().get(1)->get_children().get(
+              0));
 
       const trie<char> t1 = load_trie<char>("trie_char1.tr");
 
@@ -563,7 +577,10 @@ void test_prefix_search(){
       assert(t1[path] == t);
 
       path = {'z', 'b', 'e', 'c', 'b'};
-      assert(t1[path] == *t.get_children().get(1)->get_children().get(1)->get_children().get(0));
+      assert(
+          t1[path] ==
+          *t.get_children().get(1)->get_children().get(1)->get_children().get(
+              0));
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
@@ -571,37 +588,41 @@ void test_prefix_search(){
    }
 }
 
-void test_operator_equal(){
-
+void test_operator_equal() {
    try {
+      {
+         trie<char> father;
+         trie<char> father2;
 
-      trie<char> father;
-      trie<char> father2;
+         trie<char> t;
+         t.set_parent(&father);
+         char a = 'a';
+         t.set_label(&a);
+         father.set_weight(1);
+         father.add_child(t);
 
+         trie<char> t2;
+         t2.set_parent(&father2);
+         char b = 'a';
+         t2.set_label(&b);
+         father2.set_weight(13);
+         father2.add_child(t);
 
-      trie<char> t;
-      t.set_parent(&father);
-      char a = 'a';
-      t.set_label(&a);
-      father.set_weight(1);
-      father.add_child(t);
+         assert(father2 == father);
+      }
 
+      trie<string> t = load_trie<string>("trie_string1.tr");
+      trie<string> t1 = load_trie<string>("trie_string3.tr");
 
-      trie<char> t2;
-      t2.set_parent(&father2);
-      char b = 'a';
-      t2.set_label(&b);
-      father2.set_weight(13);
-      father2.add_child(t);
-
-      assert(father2 == father);
+      assert(t != t1);
+      
+      assert(t[{"compilers"}] == t1[{"lab1"}]);
 
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
    }
 }
-
 
 int main() {
    /* Parser basics */
@@ -640,7 +661,6 @@ int main() {
    test_ostream();
 
    test_operator_equal();
-
 
    return 0;
 }

@@ -78,7 +78,7 @@ struct bag<trie<T>> {
       }
 
       for (int i = 0; i < this->size(); i++) {
-         if (*this->nodes[i] != *other.nodes[i]) {
+         if (!areTrieEqual(*this->get(i), *other.get(i))){
             return false;
          }
       }
