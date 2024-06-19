@@ -16,9 +16,6 @@ double trie<T>::get_weight() const {
 
 template <typename T>
 void trie<T>::set_label(T* l) {
-   // Set the label only if node IS NOT the root (meaning it has a parent)
-
-   // if (!this->m_p) return;
 
    if (l == nullptr) {
       this->m_l = nullptr;
@@ -563,9 +560,6 @@ trie<T>::node_iterator::node_iterator(trie<T>* ptr) : m_ptr(ptr) {}
 
 template <typename T>
 typename trie<T>::node_iterator& trie<T>::node_iterator::operator++() {
-   // if (m_ptr->m_p == nullptr) {
-   //    throw parser_exception("Node has no parent");
-   // }
 
    m_ptr = m_ptr->m_p;
 
@@ -584,18 +578,14 @@ typename trie<T>::node_iterator trie<T>::node_iterator::operator++(int) {
 template <typename T>
 typename trie<T>::node_iterator::reference trie<T>::node_iterator::operator*()
     const {
-   // if (m_ptr->m_l == nullptr) {
-   //    throw parser_exception("Invalid input: node has no label");
-   // }
+
    return *m_ptr->m_l;
 }
 
 template <typename T>
 typename trie<T>::node_iterator::pointer trie<T>::node_iterator::operator->()
     const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Invalid input: node has no label");
-   // }
+
    return m_ptr->m_l;
 }
 
@@ -616,9 +606,6 @@ trie<T>::const_node_iterator::const_node_iterator(trie<T> const* ptr)
 template <typename T>
 typename trie<T>::const_node_iterator&
 trie<T>::const_node_iterator::operator++() {
-   // if (m_ptr->m_p == nullptr) {
-   //    throw parser_exception("Node has no parent");
-   // }
 
    m_ptr = m_ptr->m_p;
 
@@ -638,18 +625,14 @@ typename trie<T>::const_node_iterator trie<T>::const_node_iterator::operator++(
 template <typename T>
 typename trie<T>::const_node_iterator::reference
 trie<T>::const_node_iterator::operator*() const {
-   // if (m_ptr->m_l == nullptr) {
-   //    throw parser_exception("Invalid input: node has no label");
-   // }
+
    return *m_ptr->m_l;
 }
 
 template <typename T>
 typename trie<T>::const_node_iterator::pointer
 trie<T>::const_node_iterator::operator->() const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Invalid input: node has no label");
-   // }
+
    return m_ptr->m_l;
 }
 
@@ -697,22 +680,14 @@ trie<T>::leaf_iterator::leaf_iterator(trie<T>* ptr) {
 template <typename T>
 typename trie<T>::leaf_iterator::reference trie<T>::leaf_iterator::operator*()
     const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
 
-   // if (m_ptr->m_l == nullptr) {
-   //    throw parser_exception("LeafIterator operator*: node has no label");
-   // }
    return *m_ptr->m_l;
 }
 
 template <typename T>
 typename trie<T>::leaf_iterator::pointer trie<T>::leaf_iterator::operator->()
     const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
+
    return m_ptr->m_l;
 }
 
@@ -766,9 +741,7 @@ trie<T>::leaf_iterator::operator trie<T>::node_iterator() const {
 
 template <typename T>
 trie<T>& trie<T>::leaf_iterator::get_leaf() const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
+
    return *m_ptr;
 }
 
@@ -804,13 +777,6 @@ trie<T>::const_leaf_iterator::const_leaf_iterator(const trie<T>* ptr) {
 template <typename T>
 typename trie<T>::const_leaf_iterator::reference
 trie<T>::const_leaf_iterator::operator*() const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
-
-   // if (m_ptr->m_l == nullptr) {
-   //    throw parser_exception("LeafIterator operator*: node has no label");
-   // }
 
    return *m_ptr->m_l;
 }
@@ -818,9 +784,7 @@ trie<T>::const_leaf_iterator::operator*() const {
 template <typename T>
 typename trie<T>::const_leaf_iterator::pointer
 trie<T>::const_leaf_iterator::operator->() const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
+
    return m_ptr->m_l;
 }
 
@@ -878,9 +842,7 @@ trie<T>::const_leaf_iterator::operator trie<T>::const_node_iterator() const {
 
 template <typename T>
 trie<T> const& trie<T>::const_leaf_iterator::get_leaf() const {
-   // if (m_ptr == nullptr) {
-   //    throw parser_exception("Can't deference a null iterator");
-   // }
+
    return *m_ptr;
 }
 
