@@ -4,12 +4,21 @@
 #include <fstream>
 #include <iostream>
 
-#include "../src/trie.cpp"
+/*
+   1. Function 'trie<T>* get(int i) const' in the bag is needed for the tests to work. The function should return a pointer to ne i-th children.
+   2. Must edit the trie.cpp import path depending on your workspace.
+   3. Must edit the WORKSPACE_PATH variable with the global path of the project (something like /Users/User/Projects/trie-projet). It MUST NOT have a final '/'.
+
+   IMPORTANT: When you run the file, if nothing is shown in the console it means that all the test passed.
+*/
+
+#include "../src/trie.cpp" //Edit this!
+#define WORKSPACE_PATH "/Users/clucch/Code/Uni/trie-parser" //Edit this!
+
 
 using namespace std;
 namespace fs = std::filesystem;
 
-#define WORKSPACE_PATH "/Users/clucch/Uni/Projects/trie-parser"
 
 template <typename T>
 trie<T> load_trie(string filePath) {
@@ -129,20 +138,6 @@ void test_set_label() {
       assert(false);
    }
 
-   // char * label = new char('a');
-
-   // try {
-   //    /* Incorrect label, we are in root node */
-   //    trie<char> t;
-
-   //    t.set_label(label);
-
-   //    assert(false);
-
-   // } catch (const parser_exception& e) {
-   //    assert(true);
-   // }
-   // delete label;
 }
 
 void test_set_weight() {
@@ -523,7 +518,24 @@ void test_path_compression() {
 void test_ostream() {
    try {
       trie<char> t = load_trie<char>("trie_char1.tr");
-      // cout << t;
+
+      string fullPath = (string)WORKSPACE_PATH + "/tools/test_ostream.tr";
+
+      ofstream myfile(fullPath);
+      myfile << t;
+      myfile.close();
+
+
+      ifstream file(fullPath);
+
+      if (!file.is_open()) {
+         throw parser_exception("Could not open file: " + fullPath);
+      }
+
+      file >> t;
+      file.close();
+
+
    } catch (const parser_exception& e) {
       cout << e.what() << endl;
       assert(false);
